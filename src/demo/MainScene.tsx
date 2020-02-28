@@ -4,12 +4,15 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import React from 'react'
 import { Button, Form } from 'react-bootstrap'
 
+import { apiKeys } from './../../config.json'
+// test api call https://dl.edge.app/api/v1/partner/revenue?apiKey=bobkey&startDate=2019-11-14&endDate=2019-11-20
 interface MainSceneState {
   balances: {}
   type: string
   transactions: []
   nativeAmount: string
   publicAddress: string
+  keys: string[]
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
@@ -20,7 +23,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       balances: {},
       transactions: [],
       nativeAmount: '',
-      publicAddress: ''
+      publicAddress: '',
+      keys: apiKeys
     }
   }
 
@@ -127,7 +131,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       balances,
       type,
       nativeAmount,
-      publicAddress
+      publicAddress,
+      keys
     } = this.state
     return (
       <div>
