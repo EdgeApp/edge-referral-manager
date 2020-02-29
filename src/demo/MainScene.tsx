@@ -4,228 +4,167 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import React from 'react'
 import { Button, Form } from 'react-bootstrap'
 
-import { apiKeys } from './../../config.json'
+import CONFIG from './../../config.json'
+
 interface MainSceneState {
-  balances: {}
-  type: string
-  transactions: []
-  nativeAmount: string
-  publicAddress: string
-  keys: string[]
+  keys: {
+    totalEarned: number
+    installerConversionCount: number
+    installerSignupCount: number
+  }
+  apiKeys: []
+  startDate: string
+  endDate: string
+  masterKey: string
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
   constructor(props) {
     super(props)
     this.state = {
-      type: '',
-      balances: {},
-      transactions: [],
-      nativeAmount: '',
-      publicAddress: '',
-      keys: apiKeys
+      keys: {
+        totalEarned: 0,
+        installerConversionCount: 0,
+        installerSignupCount: 0
+      },
+      apiKeys: [],
+      startDate: '',
+      endDate: '',
+      masterKey: CONFIG.masterKey
     }
   }
 
-  getTransactions = (type: string): void => {
-    fetch('http://localhost:8008/transactions/?type=' + type, { method: 'GET' })
+  getSummary = (startDate: string, endDate: string): any => {
+    fetch(
+      'https://util1.edge.app/api/v1/partner/list?masterKey=' +
+        this.state.masterKey
+    )
       .then(response => {
         if (response.ok) {
           return response.json()
         }
       })
-      .then(transactionsArray => {
-        this.setState({ transactions: transactionsArray })
+      .then(KeysArray => {
+        this.setState({ apiKeys: KeysArray })
       })
       .catch(e => {
         console.log(e)
       })
-    console.log('GetTransactions is called', this.state.transactions)
+    console.log('GetTransactions is called', this.state.keys)
   }
 
-  postTransactions = (
-    type: string,
-    nativeAmount: string,
-    publicAddress: string
-  ): void => {
-    fetch('http://localhost:8008/spend/?type=' + type, {
-      body: JSON.stringify({ spendTargets: [{ nativeAmount, publicAddress }] }),
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      method: 'POST'
-    })
-      .then(response => {
-        if (response.ok) {
-          this.getBalances(this.state.type)
-          this.getTransactions(this.state.type)
-        }
-      })
-      .catch(e => {
-        console.log(e)
-      })
-    console.log('postTransactions is called')
+  // fetchSummary = (): any => {
+  //   .then(async apiKeys => {
+  //     await Promise.all(
+  //       apiKeys.map((value, index, array) => {
+  //         fetch(
+  //           'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
+  //             value.apiKey +
+  //             '&startDate=' +
+  //             startDate +
+  //             '&endDate=' +
+  //             endDate,
+  //           { method: 'GET' }
+  //         )
+  //           .then(response => {
+  //             if (response.ok) {
+  //               return response.json()
+  //             }
+  //           })
+  //           .then(apiKeys => {
+  //             array[index] = { ...e, ...data }
+  //           })
+  //           .then(KeysArray => {
+  //             this.setState({ keys: KeysArray })
+  //           })
+  //       })
+  //     )
+  //   })
+  // }
+
+  handleSummaryClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    this.getSummary(this.state.startDate, this.state.endDate)
+    console.log('Summary click called', this.state.keys)
   }
 
-  getBalances = (type: string): void => {
-    fetch('http://localhost:8008/balances/?type=' + type, { method: 'GET' })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-      })
-      .then(balancesArray => {
-        this.setState({ balances: balancesArray })
-      })
-      .catch(e => {
-        console.log(e)
-      })
-    console.log('GetBalances is called', this.state.balances)
+  handleStartDateChange = (event: any): void => {
+    const startDate = event.target.value
+    this.setState({ startDate })
   }
 
-  handleBalancesClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    this.getBalances(this.state.type)
-    console.log('Handle Balances Click with type', this.state.type)
-  }
-
-  handleTransactionsClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ): void => {
-    this.getTransactions(this.state.type)
-    console.log('Handle Transactions Click with type', this.state.type)
-  }
-
-  handleSpendClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    this.postTransactions(
-      this.state.type,
-      this.state.nativeAmount,
-      this.state.publicAddress
-    )
-    console.log(
-      'Handle Spend Click with type',
-      this.state.type,
-      'and native amount:',
-      this.state.nativeAmount
-    )
-  }
-
-  handleTypeChange = (event: any): void => {
-    const value = event.target.value
-    this.setState({ type: value })
-  }
-
-  handleSpendChange = (event: any): void => {
-    const nativeAmount = event.target.value
-    this.setState({ nativeAmount })
-  }
-
-  handleAddressChange = (event: any): void => {
-    const publicAddress = event.target.value
-    this.setState({ publicAddress })
+  handleEndDateChange = (event: any): void => {
+    const endDate = event.target.value
+    this.setState({ endDate })
   }
 
   render(): React.ReactNode {
-    const {
-      transactions,
-      balances,
-      type,
-      nativeAmount,
-      publicAddress,
-      keys
-    } = this.state
+    const { startDate, endDate, apiKeys } = this.state
     return (
       <div>
-        <h1> Edge Rest Wallet </h1>
-        <p> App </p>
+        <h1> Edge Referral Manager </h1>
+        <p>
+          Load a summary of payments by referral partner APIkey and make a
+          payments to referral partners.
+        </p>
         <Form>
           <Form.Group>
-            <Form.Label>Wallet Type</Form.Label>
+            <Form.Label>Start Date</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter Wallet Type"
-              value={type}
-              onChange={this.handleTypeChange}
+              name="startDate"
+              value={startDate}
+              onChange={this.handleStartDateChange}
             />
             <Form.Text className="text-muted">
-              Please use a valid wallet type.
+              Please enter a start date.
+            </Form.Text>
+            <Form.Label>End Date</Form.Label>
+            <Form.Control
+              type="text"
+              name="endDate"
+              value={endDate}
+              onChange={this.handleEndDateChange}
+            />
+            <Form.Text className="text-muted">
+              Please enter an end date.
             </Form.Text>
           </Form.Group>
         </Form>
         <Button
           variant="primary"
           type="submit"
-          onClick={this.handleBalancesClick}
+          onClick={this.handleSummaryClick}
         >
-          Get Balances
-        </Button>
-        <div>Here are balances: {JSON.stringify(balances)}</div>
-        <Form>
-          <Form.Group>
-            <Form.Label>Amount</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="0.00"
-              name="nativeAmount"
-              value={nativeAmount}
-              onChange={this.handleSpendChange}
-            />
-            <Form.Text className="text-muted">
-              Please enter an amount.
-            </Form.Text>
-            <Form.Label>Public Address</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Public Address"
-              name="publicAddress"
-              value={publicAddress}
-              onChange={this.handleAddressChange}
-            />
-            <Form.Text className="text-muted">
-              Please enter an amount.
-            </Form.Text>
-          </Form.Group>
-        </Form>
-        <Button variant="primary" type="submit" onClick={this.handleSpendClick}>
-          Spend Transaction
-        </Button>
-        <div>To get a full list of transactions, click the button below:</div>
-        <Button
-          variant="primary"
-          type="submit"
-          onClick={this.handleTransactionsClick}
-        >
-          Get Transactions
+          Get a Summary
         </Button>
         <div>
+          <div>{JSON.stringify(apiKeys)}</div>
           <table className="table table-responsive text-wrap">
             <thead className="thead-dark">
               <tr>
-                <th>#</th>
-                <th>Currency Code:</th>
-                <th>Native Amount:</th>
-                <th>Network Fee:</th>
-                <th>Block Height:</th>
-                <th>Date:</th>
-                <th>Transaction ID:</th>
+                <th>CheckBox</th>
+                <th>ID:</th>
+                <th>Installer Conversion Count:</th>
+                <th>Installer SignUp Count:</th>
+                <th>Amount Owed:</th>
+                <th>Total Earned:</th>
               </tr>
             </thead>
-            {transactions.map((transaction: any, index) => {
-              return (
-                <tbody key={index}>
-                  <tr>
-                    <th scope="row">{index + 1}</th>
-                    <td>{transaction.currencyCode}</td>
-                    <td>{transaction.nativeAmount}</td>
-                    <td>{transaction.networkFee}</td>
-                    <td>{JSON.stringify(transaction.blockHeight)}</td>
-                    <td>{JSON.stringify(new Date(transaction.date * 1000))}</td>
-                    <td>{transaction.txid}</td>
-                  </tr>
-                </tbody>
-              )
-            })}
+            <tbody>
+              <tr>
+                <th>Checkbox</th>
+                <td>TBD</td>
+                <td>TBD</td>
+                <td>TBD</td>
+                <td>TBD</td>
+                <td>TBD</td>
+              </tr>
+            </tbody>
           </table>
         </div>
+        <Button variant="primary" type="submit">
+          Pay Selected Referral Partners
+        </Button>
       </div>
     )
   }
