@@ -12,10 +12,13 @@ interface MainSceneState {
     installerConversionCount: number
     installerSignupCount: number
   }
-  apiKeys: []
+  partners: PartnerObject[]
   startDate: string
   endDate: string
-  masterKey: string
+}
+
+interface PartnerObject {
+  apiKey?: string
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
@@ -27,63 +30,48 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         installerConversionCount: 0,
         installerSignupCount: 0
       },
-      apiKeys: [],
+      partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
-      endDate: '',
-      masterKey: CONFIG.masterKey
+      endDate: ''
     }
   }
 
-  getSummary = (startDate: string, endDate: string): any => {
-    fetch(
-      'https://util1.edge.app/api/v1/partner/list?masterKey=' +
-        this.state.masterKey
-    )
-      .then(response => {
-        if (response.ok) {
-          return response.json()
+  getSummaryAsync = async (
+    startDate: string,
+    endDate: string
+  ): Promise<void> => {
+    try {
+      const json: PartnerObject[] = await fetch(
+        'https://util1.edge.app/api/v1/partner/list?masterKey=' +
+          CONFIG.masterKey
+      ).then(response => response.json())
+      const partners = json.map(partner => ({
+        apiKey: partner.apiKey
+      }))
+      this.setState({ partners })
+      partners.map(async key => {
+        if (key.apiKey != null) {
+          const json2 = await fetch(
+            'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
+              key.apiKey +
+              '&startDate=' +
+              startDate +
+              '&endDate=' +
+              endDate,
+            { method: 'GET' }
+          ).then(response => response.json())
+          this.setState({ keys: json2 })
         }
       })
-      .then(KeysArray => {
-        this.setState({ apiKeys: KeysArray })
-      })
-      .catch(e => {
-        console.log(e)
-      })
-    console.log('GetTransactions is called', this.state.keys)
+    } catch (e) {
+      console.log(e)
+    }
   }
 
-  // fetchSummary = (): any => {
-  //   .then(async apiKeys => {
-  //     await Promise.all(
-  //       apiKeys.map((value, index, array) => {
-  //         fetch(
-  //           'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
-  //             value.apiKey +
-  //             '&startDate=' +
-  //             startDate +
-  //             '&endDate=' +
-  //             endDate,
-  //           { method: 'GET' }
-  //         )
-  //           .then(response => {
-  //             if (response.ok) {
-  //               return response.json()
-  //             }
-  //           })
-  //           .then(apiKeys => {
-  //             array[index] = { ...e, ...data }
-  //           })
-  //           .then(KeysArray => {
-  //             this.setState({ keys: KeysArray })
-  //           })
-  //       })
-  //     )
-  //   })
-  // }
-
   handleSummaryClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    this.getSummary(this.state.startDate, this.state.endDate)
+    this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
+      console.log(e)
+    })
     console.log('Summary click called', this.state.keys)
   }
 
@@ -98,7 +86,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, apiKeys } = this.state
+    const { startDate, endDate, partners, keys } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -138,7 +126,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           Get a Summary
         </Button>
         <div>
-          <div>{JSON.stringify(apiKeys)}</div>
+          <div>{JSON.stringify(partners)}</div>
+          <div>{JSON.stringify(keys)}</div>
           <table className="table table-responsive text-wrap">
             <thead className="thead-dark">
               <tr>
