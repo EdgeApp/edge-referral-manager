@@ -11,6 +11,7 @@ interface MainSceneState {
   partners: PartnerObject[]
   startDate: string
   endDate: string
+  checked: boolean
 }
 
 interface PartnerObject {
@@ -41,7 +42,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
-      endDate: ''
+      endDate: '',
+      checked: false
     }
   }
 
@@ -80,6 +82,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
+  handleCheckClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    this.setState({ checked: !this.state.checked })
+    console.log('Handle Check called', this.state.checked)
+  }
+
   handleSummaryClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
@@ -98,7 +105,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, partners, reports } = this.state
+    const { startDate, endDate, reports } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -137,11 +144,20 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         >
           Get a Summary
         </Button>
-        <div>
-          <table className="table table-responsive text-wrap">
+        <div className="container">
+          <table role="form" className="table table-responsive text-wrap">
             <thead className="thead-dark">
               <tr>
-                <th>CheckBox</th>
+                <th className="checkbox">
+                  <input
+                    type="checkbox"
+                    className="check"
+                    id="checkAll"
+                    onClick={this.handleCheckClick}
+                    defaultChecked={this.state.checked}
+                  />
+                  Select All
+                </th>
                 <th>ID:</th>
                 <th>Installer Conversion Count:</th>
                 <th>Installer SignUp Count:</th>
@@ -157,7 +173,15 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               return (
                 <tbody key={index}>
                   <tr>
-                    <th>Checkbox</th>
+                    <th className="checkbox">
+                      <input
+                        type="checkbox"
+                        className="check"
+                        aria-label="Checkbox for following text input"
+                        onClick={this.handleCheckClick}
+                        defaultChecked={this.state.checked}
+                      />
+                    </th>
                     <td>{name[0]}</td>
                     <td>{report.installerConversionCount}</td>
                     <td>{report.installerSignupCount}</td>
