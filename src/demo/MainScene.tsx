@@ -138,8 +138,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           Get a Summary
         </Button>
         <div>
-          <div>{JSON.stringify(partners)}</div>
-          <div>{JSON.stringify(reports)}</div>
           <table className="table table-responsive text-wrap">
             <thead className="thead-dark">
               <tr>
@@ -151,16 +149,24 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 <th>Total Earned:</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <th>Checkbox</th>
-                <td>TBD</td>
-                <td>TBD</td>
-                <td>TBD</td>
-                <td>TBD</td>
-                <td>TBD</td>
-              </tr>
-            </tbody>
+            {reports.map((report: any, index) => {
+              if (report == null || report.installerConversions == null) {
+                return ''
+              }
+              const name = Object.keys(report.installerConversions)
+              return (
+                <tbody key={index}>
+                  <tr>
+                    <th>Checkbox</th>
+                    <td>{name[0]}</td>
+                    <td>{report.installerConversionCount}</td>
+                    <td>{report.installerSignupCount}</td>
+                    <td>TBD</td>
+                    <td>{report.totalEarned}</td>
+                  </tr>
+                </tbody>
+              )
+            })}
           </table>
         </div>
         <Button variant="primary" type="submit">
