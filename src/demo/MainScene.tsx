@@ -7,11 +7,7 @@ import { Button, Form } from 'react-bootstrap'
 import CONFIG from './../../config.json'
 
 interface MainSceneState {
-  keys: {
-    totalEarned: number
-    installerConversionCount: number
-    installerSignupCount: number
-  }
+  reports: PartnerReferralReport[]
   partners: PartnerObject[]
   startDate: string
   endDate: string
@@ -21,15 +17,28 @@ interface PartnerObject {
   apiKey?: string
 }
 
+interface PartnerReferralReport {
+  totalEarned: number
+  installerConversionCount: number
+  installerSignupCount: number
+}
+
 export class MainScene extends React.Component<{}, MainSceneState> {
   constructor(props) {
     super(props)
     this.state = {
-      keys: {
-        totalEarned: 0,
-        installerConversionCount: 0,
-        installerSignupCount: 0
-      },
+      reports: [
+        {
+          totalEarned: 0,
+          installerConversionCount: 0,
+          installerSignupCount: 0
+        },
+        {
+          totalEarned: 1,
+          installerConversionCount: 1,
+          installerSignupCount: 1
+        }
+      ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
       endDate: ''
@@ -49,20 +58,23 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         apiKey: partner.apiKey
       }))
       this.setState({ partners })
-      partners.map(async key => {
-        if (key.apiKey != null) {
-          const json2 = await fetch(
+      const promises: Array<Promise<PartnerReferralReport>> = []
+      for (const partner of partners) {
+        if (partner.apiKey != null) {
+          const promise = fetch(
             'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
-              key.apiKey +
+              partner.apiKey +
               '&startDate=' +
               startDate +
               '&endDate=' +
               endDate,
             { method: 'GET' }
           ).then(response => response.json())
-          this.setState({ keys: json2 })
+          promises.push(promise)
         }
-      })
+      }
+      const partnerReports = await Promise.all(promises)
+      this.setState({ reports: partnerReports })
     } catch (e) {
       console.log(e)
     }
@@ -72,7 +84,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
     })
-    console.log('Summary click called', this.state.keys)
+    console.log('Summary click called', this.state.reports)
   }
 
   handleStartDateChange = (event: any): void => {
@@ -86,7 +98,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, partners, keys } = this.state
+    const { startDate, endDate, partners, reports } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -127,7 +139,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         </Button>
         <div>
           <div>{JSON.stringify(partners)}</div>
-          <div>{JSON.stringify(keys)}</div>
+          <div>{JSON.stringify(reports)}</div>
           <table className="table table-responsive text-wrap">
             <thead className="thead-dark">
               <tr>
