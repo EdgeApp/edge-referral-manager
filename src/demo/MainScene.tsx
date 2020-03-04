@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+import { bns } from 'biggystring'
 import React from 'react'
 import { Button, Form } from 'react-bootstrap'
 
