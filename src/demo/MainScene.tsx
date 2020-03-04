@@ -22,6 +22,17 @@ interface PartnerReferralReport {
   totalEarned: number
   installerConversionCount: number
   installerSignupCount: number
+  installerConversions: {}
+  payouts: Payout[]
+  amountOwed?: number
+}
+
+interface Payout {
+  date: string
+  dollarValue: number
+  currencyCode: string
+  nativeAmount: string
+  isAdjustment: boolean
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
@@ -32,12 +43,24 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         {
           totalEarned: 0,
           installerConversionCount: 0,
-          installerSignupCount: 0
+          installerSignupCount: 0,
+          payouts: [],
+          installerConversions: {}
         },
         {
           totalEarned: 1,
           installerConversionCount: 1,
-          installerSignupCount: 1
+          installerSignupCount: 1,
+          payouts: [
+            {
+              date: '2020-02-20T00:00:00.000Z',
+              dollarValue: 0.1,
+              currencyCode: 'ETH',
+              nativeAmount: '1000000000',
+              isAdjustment: false
+            }
+          ],
+          installerConversions: {}
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
@@ -71,11 +94,25 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               '&endDate=' +
               endDate,
             { method: 'GET' }
-          ).then(response => response.json())
+          )
+            .then(response => response.json())
+            .then(jsonResponse => ({
+              ...jsonResponse,
+              apiKey: partner.apiKey
+            }))
           promises.push(promise)
         }
       }
       const partnerReports = await Promise.all(promises)
+      for (const report of partnerReports) {
+        let remainder: number = report.totalEarned
+        if (report.payouts.length > 0) {
+          for (let i = 0; i < report.payouts.length; i++) {
+            remainder -= report.payouts[i].dollarValue
+          }
+        }
+        report.amountOwed = remainder
+      }
       this.setState({ reports: partnerReports })
     } catch (e) {
       console.log(e)
@@ -165,7 +202,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 <th>Total Earned:</th>
               </tr>
             </thead>
-            {reports.map((report: any, index) => {
+            {reports.map((report: PartnerReferralReport, index) => {
               if (report == null || report.installerConversions == null) {
                 return ''
               }
@@ -185,7 +222,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{name[0]}</td>
                     <td>{report.installerConversionCount}</td>
                     <td>{report.installerSignupCount}</td>
-                    <td>TBD</td>
+                    <td>{report.amountOwed}</td>
                     <td>{report.totalEarned}</td>
                   </tr>
                 </tbody>
