@@ -126,6 +126,22 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
+  putPayout = async (payoutArray = []): Promise<void> => {
+    try {
+      await fetch(
+        'http://util1.edge.app/api/v1/partner/?&masterKey=' + CONFIG.masterKey,
+        {
+          body: JSON.stringify(payoutArray),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: 'PUT'
+        }
+      ).then(response => response.json())
+    } catch (e) {
+      console.log(e)
+    }
+  }
   handleCheckClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     this.setState({ checked: !this.state.checked })
     console.log('Handle Check called', this.state.checked)
