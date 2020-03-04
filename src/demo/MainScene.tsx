@@ -11,8 +11,15 @@ interface MainSceneState {
   partners: PartnerObject[]
   startDate: string
   endDate: string
-  btcRate: number
+  rates: Rates
   allChecked: boolean
+}
+
+interface Rates {
+  BTC: Number
+  BCH: Number
+  ETH: Number
+  XRP: Number
 }
 
 interface PartnerObject {
@@ -74,7 +81,12 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
       endDate: '',
-      btcRate: 8500,
+      rates: {
+        BTC: 8500,
+        BCH: 300,
+        XRP: 0.3,
+        ETH: 300
+      },
       allChecked: false
     }
   }
@@ -124,11 +136,19 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.amountOwed = remainder
       }
       this.setState({ reports: partnerReports })
-      const getRate: any = await fetch(
-        'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=BTC_USD&date=' +
-          this.state.endDate
-      ).then(response => response.json())
-      this.setState({ btcRate: parseFloat(getRate.exchangeRate) })
+
+      // Get Exchange Rates for supported payout currencies
+      const exchangeRates: Rates = this.state.rates
+      for (const code of Object.keys(exchangeRates)) {
+        const getRate: any = await fetch(
+          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
+            code +
+            '_USD&date=' +
+            this.state.endDate
+        ).then(response => response.json())
+        exchangeRates[code] = parseFloat(getRate.exchangeRate)
+      }
+      this.setState({ rates: exchangeRates })
     } catch (e) {
       console.log(e)
     }
