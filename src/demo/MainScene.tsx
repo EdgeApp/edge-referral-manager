@@ -174,7 +174,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
   handleAllClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
-      report.checked = true
+      report.checked = !report.checked
       return report
     })
     this.setState({ reports })
