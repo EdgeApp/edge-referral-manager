@@ -12,6 +12,7 @@ interface MainSceneState {
   startDate: string
   endDate: string
   checked: boolean
+  btcRate: number
 }
 
 interface PartnerObject {
@@ -66,7 +67,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
       endDate: '',
-      checked: false
+      checked: false,
+      btcRate: '8500'
     }
   }
 
@@ -114,6 +116,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.amountOwed = remainder
       }
       this.setState({ reports: partnerReports })
+      const getRate: any = await fetch(
+        'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=BTC_USD&date=' +
+          this.state.endDate
+      ).then(response => response.json())
+      this.setState({ btcRate: parseFloat(getRate.exchangeRate) })
     } catch (e) {
       console.log(e)
     }
