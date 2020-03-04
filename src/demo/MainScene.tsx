@@ -24,6 +24,7 @@ interface PartnerReferralReport {
   installerSignupCount: number
   installerConversions: {}
   payouts: Payout[]
+  amountOwed?: number
 }
 
 interface Payout {
@@ -93,11 +94,25 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               '&endDate=' +
               endDate,
             { method: 'GET' }
-          ).then(response => response.json())
+          )
+            .then(response => response.json())
+            .then(jsonResponse => ({
+              ...jsonResponse,
+              apiKey: partner.apiKey
+            }))
           promises.push(promise)
         }
       }
       const partnerReports = await Promise.all(promises)
+      for (const report of partnerReports) {
+        let remainder: number = report.totalEarned
+        if (report.payouts.length > 0) {
+          for (let i = 0; i < report.payouts.length; i++) {
+            remainder -= report.payouts[i].dollarValue
+          }
+        }
+        report.amountOwed = remainder
+      }
       this.setState({ reports: partnerReports })
     } catch (e) {
       console.log(e)
@@ -192,12 +207,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 return ''
               }
               const name = Object.keys(report.installerConversions)
-              let amountOwed = report.totalEarned
-              if (report.payouts.length > 0) {
-                for (let i = 0; i < report.payouts.length; i++) {
-                  amountOwed -= report.payouts[i].dollarValue
-                }
-              }
               return (
                 <tbody key={index}>
                   <tr>
@@ -213,7 +222,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{name[0]}</td>
                     <td>{report.installerConversionCount}</td>
                     <td>{report.installerSignupCount}</td>
-                    <td>{amountOwed}</td>
+                    <td>{report.amountOwed}</td>
                     <td>{report.totalEarned}</td>
                   </tr>
                 </tbody>
