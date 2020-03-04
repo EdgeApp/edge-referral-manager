@@ -11,8 +11,8 @@ interface MainSceneState {
   partners: PartnerObject[]
   startDate: string
   endDate: string
-  checked: boolean
   btcRate: number
+  allChecked: boolean
 }
 
 interface PartnerObject {
@@ -20,12 +20,14 @@ interface PartnerObject {
 }
 
 interface PartnerReferralReport {
+  payouts: Payout[]
   totalEarned: number
   installerConversionCount: number
   installerSignupCount: number
   installerConversions: {}
-  payouts: Payout[]
   amountOwed?: number
+  apiKey: string
+  checked: boolean
 }
 
 interface Payout {
@@ -37,16 +39,19 @@ interface Payout {
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
+  payoutArray: Payout[] = []
   constructor(props) {
     super(props)
     this.state = {
       reports: [
         {
+          payouts: [],
           totalEarned: 0,
           installerConversionCount: 0,
           installerSignupCount: 0,
-          payouts: [],
-          installerConversions: {}
+          installerConversions: {},
+          checked: false,
+          apiKey: ''
         },
         {
           totalEarned: 1,
@@ -61,14 +66,16 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               isAdjustment: false
             }
           ],
-          installerConversions: {}
+          installerConversions: {},
+          checked: false,
+          apiKey: ''
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
       endDate: '',
-      checked: false,
-      btcRate: '8500'
+      btcRate: 8500,
+      allChecked: false
     }
   }
 
@@ -100,7 +107,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             .then(response => response.json())
             .then(jsonResponse => ({
               ...jsonResponse,
-              apiKey: partner.apiKey
+              apiKey: partner.apiKey,
+              checked: false
             }))
           promises.push(promise)
         }
@@ -142,9 +150,47 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       console.log(e)
     }
   }
+
+  // handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  //   this.state.reports.map(report)
+  //    if (checked === true) {
+  //     if (report.currencyCode === "BTC") {
+  //       const nativeAmount = report.amountowed/8500
+  //     fetch 'exchangerate/'
+  //      }
+  //     let payout = {
+  //       date: new Date(),
+  //       dollarValue: report.amountowed,
+  //       currencyCode: report.currencycode?,
+  //       nativeAmount: nativeAmount
+  //     }
+  //    this.payoutArray.push({ apiKey: 'report.apiKey', payout: 'payout': payout})
+  //   }
+  //   else do nothing
+  //   this.putpayout(payoutArray)
+  //   payoutArray.map(payout => spend payment to public address) OR this.spendPayment(payoutArray)
+  //   this.setState({payoutArray: []})
+  // }
+
+  handleAllClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    const reports: PartnerReferralReport[] = this.state.reports.map(report => {
+      report.checked = true
+      return report
+    })
+    this.setState({ reports })
+    console.log('Handle All', this.state.reports)
+  }
+
   handleCheckClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    this.setState({ checked: !this.state.checked })
-    console.log('Handle Check called', this.state.checked)
+    const apiKey = event.target.name
+    const reports: PartnerReferralReport[] = this.state.reports.map(report => {
+      if (report.apiKey === apiKey) {
+        report.checked = !report.checked
+      }
+      return report
+    })
+    this.setState({ reports })
+    console.log('Handle Check One', this.state.reports)
   }
 
   handleSummaryClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
@@ -165,7 +211,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, reports } = this.state
+    const { startDate, endDate, reports, allChecked } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -213,8 +259,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     type="checkbox"
                     className="check"
                     id="checkAll"
-                    onClick={this.handleCheckClick}
-                    defaultChecked={this.state.checked}
+                    onClick={this.handleAllClick}
+                    name={allChecked}
                   />
                   Select All
                 </th>
@@ -238,8 +284,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                         type="checkbox"
                         className="check"
                         aria-label="Checkbox for following text input"
+                        checked={report.checked}
                         onClick={this.handleCheckClick}
-                        defaultChecked={this.state.checked}
+                        name={report.apiKey}
                       />
                     </th>
                     <td>{name[0]}</td>
