@@ -231,31 +231,37 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.state.reports.map(report => {
       // Pays only the referral partners who have checkboxes
       if (report.checked === true) {
-        const amountOwedString = report.amountOwed.toString()
-        const payoutCurrency = report.incentive.payoutCurrency
-        const rateString = this.state.currencyCodes[payoutCurrency].rate
-        const currencyDivider = this.state.currencyCodes[payoutCurrency].div
-        const currencyType = this.state.currencyCodes[payoutCurrency].type
-        console.log('ratestring', rateString)
-        // Creates a new payout object to update the database
-        const newPayout: Payout = {
-          date: new Date().toISOString(),
-          dollarValue: report.amountOwed,
-          currencyCode: payoutCurrency,
-          nativeAmount: bns.div(
-            bns.mul(amountOwedString, currencyDivider),
-            rateString,
-            16
-          ),
-          isAdjustment: true
+        // Pays only the checked referral partners who have a payoutaddress and currency
+        if (
+          typeof report.incentive.payoutCurrency === 'string' &&
+          typeof report.incentive.payoutAddress === 'string'
+        ) {
+          const amountOwedString = report.amountOwed.toString()
+          const payoutCurrency = report.incentive.payoutCurrency
+          const rateString = this.state.currencyCodes[payoutCurrency].rate
+          const currencyDivider = this.state.currencyCodes[payoutCurrency].div
+          const currencyType = this.state.currencyCodes[payoutCurrency].type
+          console.log('ratestring', rateString)
+          // Creates a new payout object to update the database
+          const newPayout: Payout = {
+            date: new Date().toISOString(),
+            dollarValue: report.amountOwed,
+            currencyCode: payoutCurrency,
+            nativeAmount: bns.div(
+              bns.mul(amountOwedString, currencyDivider),
+              rateString,
+              16
+            ),
+            isAdjustment: true
+          }
+          // Calls the make payment function with amount, wallet type, and payoutaddress
+          this.makePayment(
+            newPayout.nativeAmount,
+            currencyType,
+            report.incentive.payoutAddress
+          )
+          payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
         }
-        // Calls the make payment function with amount, wallet type, and payoutaddress
-        this.makePayment(
-          newPayout.nativeAmount,
-          currencyType,
-          report.incentive.payoutAddress
-        )
-        payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
       }
       return report
     })
