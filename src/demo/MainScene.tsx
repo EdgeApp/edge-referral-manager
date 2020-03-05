@@ -229,25 +229,33 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     // Creates an array of all payouts that need to be made to selected referral partners
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
+      // Pays only the referral partners who have checkboxes
       if (report.checked === true) {
         const amountOwedString = report.amountOwed.toString()
-        const btcRateString = this.state.rates.BTC.toString()
-        const publicAddress = report.incentive.payoutAddress
+        const payoutCurrency = report.incentive.payoutCurrency
+        const rateString = this.state.currencyCodes[
+          payoutCurrency
+        ].rate.toString()
+        const currencyDivider = this.state.currencyCodes[payoutCurrency].div
+        const currencyType = this.state.currencyCodes[payoutCurrency].type
+        console.log('ratestring', rateString)
+        // Creates a new payout object to update the database
         const newPayout: Payout = {
           date: new Date().toISOString(),
           dollarValue: report.amountOwed,
-          currencyCode: report.incentive.payoutCurrency,
+          currencyCode: payoutCurrency,
           nativeAmount: bns.div(
-            bns.mul(amountOwedString, '10000000'),
-            btcRateString,
+            bns.mul(amountOwedString, currencyDivider),
+            rateString,
             16
           ),
           isAdjustment: true
         }
+        // Calls the make payment function with amount, wallet type, and payoutaddress
         this.makePayment(
           newPayout.nativeAmount,
-          newPayout.currencyCode,
-          publicAddress
+          currencyType,
+          report.incentive.payoutAddress
         )
         payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
       }
@@ -257,23 +265,22 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.putPayout(payoutArray).catch(e => {
       console.log(e)
     })
-    // Calls the spendPayout function with payoutArray as an argument
     // Resets payout array to empty, updates reports
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
     })
-    console.log(this.payoutArray, this.state.rates.BTC)
+    console.log(this.payoutArray)
   }
 
   makePayment = (
     nativeAmount: string,
-    currencyCode: string,
+    currencyType: string,
     publicAddress: string
   ): void => {
     console.log(
       'makePayment was called',
       this.payoutArray,
-      currencyCode,
+      currencyType,
       nativeAmount,
       publicAddress
     )
