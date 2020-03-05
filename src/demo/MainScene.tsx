@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'bootstrap/dist/css/bootstrap.min.css'
 
+import { bns } from 'biggystring'
 import React from 'react'
 import { Button, Form } from 'react-bootstrap'
 
@@ -32,7 +33,7 @@ interface PartnerReferralReport {
   installerConversionCount: number
   installerSignupCount: number
   installerConversions: {}
-  amountOwed?: number
+  amountOwed: number
   apiKey: string
   checked: boolean
 }
@@ -43,10 +44,16 @@ interface Payout {
   currencyCode: string
   nativeAmount: string
   isAdjustment: boolean
+  apiKey?: string
+}
+
+interface UpdatePayout {
+  apiKey: string
+  payout: Payout
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
-  payoutArray: Payout[] = []
+  payoutArray: UpdatePayout[] = []
   constructor(props) {
     super(props)
     this.state = {
@@ -58,7 +65,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           installerSignupCount: 0,
           installerConversions: {},
           checked: false,
-          apiKey: ''
+          apiKey: '',
+          amountOwed: 0
         },
         {
           totalEarned: 1,
@@ -75,7 +83,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           ],
           installerConversions: {},
           checked: false,
-          apiKey: ''
+          apiKey: '',
+          amountOwed: 0
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
@@ -157,7 +166,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   putPayout = async (payoutArray = []): Promise<void> => {
     try {
       await fetch(
-        'http://util1.edge.app/api/v1/partner/?&masterKey=' + CONFIG.masterKey,
+        'http://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
+          CONFIG.masterKey,
         {
           body: JSON.stringify(payoutArray),
           headers: {
@@ -171,28 +181,34 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
-  // handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-  //   this.state.reports.map(report)
-  //    if (checked === true) {
-  //     if (report.currencyCode === "BTC") {
-  //       const nativeAmount = report.amountowed/8500
-  //     fetch 'exchangerate/'
-  //      }
-  //     let payout = {
-  //       date: new Date(),
-  //       dollarValue: report.amountowed,
-  //       currencyCode: report.currencycode?,
-  //       nativeAmount: nativeAmount
-  //     }
-  //    this.payoutArray.push({ apiKey: 'report.apiKey', payout: 'payout': payout})
-  //   }
-  //   else do nothing
+  handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    const payoutArray = this.payoutArray
+    this.state.reports.map(report => {
+      if (report.checked === true) {
+        const amountOwedString = report.amountOwed.toString()
+        const btcRateString = this.state.rates.BTC.toString()
+        const newPayout: Payout = {
+          date: new Date().toISOString(),
+          dollarValue: report.amountOwed,
+          currencyCode: 'BTC',
+          nativeAmount: bns.div(
+            bns.mul(amountOwedString, '10000000'),
+            btcRateString,
+            16
+          ),
+          isAdjustment: true
+        }
+        payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
+      }
+      return report
+    })
+    console.log(this.payoutArray, this.state.rates.BTC)
+  }
   //   this.putpayout(payoutArray)
   //   payoutArray.map(payout => spend payment to public address) OR this.spendPayment(payoutArray)
   //   this.setState({payoutArray: []})
-  // }
 
-  handleAllClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
       report.checked = !report.checked
       return report
@@ -201,7 +217,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     console.log('Handle All', this.state.reports)
   }
 
-  handleCheckClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handleCheckClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const apiKey = event.target.name
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
       if (report.apiKey === apiKey) {
@@ -231,7 +247,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, reports, allChecked } = this.state
+    const { startDate, endDate, reports } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -279,8 +295,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     type="checkbox"
                     className="check"
                     id="checkAll"
-                    onClick={this.handleAllClick}
-                    name={allChecked}
+                    onChange={this.handleAllClick}
                   />
                   Select All
                 </th>
@@ -305,7 +320,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                         className="check"
                         aria-label="Checkbox for following text input"
                         checked={report.checked}
-                        onClick={this.handleCheckClick}
+                        onChange={this.handleCheckClick}
                         name={report.apiKey}
                       />
                     </th>
@@ -320,7 +335,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             })}
           </table>
         </div>
-        <Button variant="primary" type="submit">
+        <Button
+          variant="primary"
+          type="submit"
+          onClick={this.handlePayoutClick}
+        >
           Pay Selected Referral Partners
         </Button>
       </div>
