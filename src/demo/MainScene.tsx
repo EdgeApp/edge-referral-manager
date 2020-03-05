@@ -33,7 +33,7 @@ interface PartnerReferralReport {
   installerConversionCount: number
   installerSignupCount: number
   installerConversions: {}
-  amountOwed?: number
+  amountOwed: number
   apiKey: string
   checked: boolean
 }
@@ -65,7 +65,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           installerSignupCount: 0,
           installerConversions: {},
           checked: false,
-          apiKey: ''
+          apiKey: '',
+          amountOwed: 0
         },
         {
           totalEarned: 1,
@@ -82,7 +83,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           ],
           installerConversions: {},
           checked: false,
-          apiKey: ''
+          apiKey: '',
+          amountOwed: 0
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
@@ -215,7 +217,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     console.log('Handle All', this.state.reports)
   }
 
-  handleCheckClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handleCheckClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const apiKey = event.target.name
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
       if (report.apiKey === apiKey) {
@@ -245,7 +247,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, reports, allChecked } = this.state
+    const { startDate, endDate, reports } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -293,8 +295,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     type="checkbox"
                     className="check"
                     id="checkAll"
-                    onClick={this.handleAllClick}
-                    name={allChecked}
+                    onChange={this.handleAllClick}
                   />
                   Select All
                 </th>
@@ -319,7 +320,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                         className="check"
                         aria-label="Checkbox for following text input"
                         checked={report.checked}
-                        onClick={this.handleCheckClick}
+                        onChange={this.handleCheckClick}
                         name={report.apiKey}
                       />
                     </th>
