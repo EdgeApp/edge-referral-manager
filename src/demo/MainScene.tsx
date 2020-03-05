@@ -164,7 +164,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   putPayout = async (payoutArray = []): Promise<void> => {
     try {
       await fetch(
-        'http://util1.edge.app/api/v1/partner/?&masterKey=' + CONFIG.masterKey,
+        'http://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
+          CONFIG.masterKey,
         {
           body: JSON.stringify(payoutArray),
           headers: {
@@ -178,28 +179,34 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
-  // handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
-  //   this.state.reports.map(report)
-  //    if (checked === true) {
-  //     if (report.currencyCode === "BTC") {
-  //       const nativeAmount = report.amountowed/8500
-  //     fetch 'exchangerate/'
-  //      }
-  //     let payout = {
-  //       date: new Date(),
-  //       dollarValue: report.amountowed,
-  //       currencyCode: report.currencycode?,
-  //       nativeAmount: nativeAmount
-  //     }
-  //    this.payoutArray.push({ apiKey: 'report.apiKey', payout: 'payout': payout})
-  //   }
-  //   else do nothing
+  handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    const payoutArray = this.payoutArray
+    this.state.reports.map(report => {
+      if (report.checked === true) {
+        const amountOwedString = report.amountOwed.toString()
+        const btcRateString = this.state.rates.BTC.toString()
+        const newPayout: Payout = {
+          date: new Date().toISOString(),
+          dollarValue: report.amountOwed,
+          currencyCode: 'BTC',
+          nativeAmount: bns.div(
+            bns.mul(amountOwedString, '10000000'),
+            btcRateString,
+            16
+          ),
+          isAdjustment: true
+        }
+        payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
+      }
+      return report
+    })
+    console.log(this.payoutArray, this.state.rates.BTC)
+  }
   //   this.putpayout(payoutArray)
   //   payoutArray.map(payout => spend payment to public address) OR this.spendPayment(payoutArray)
   //   this.setState({payoutArray: []})
-  // }
 
-  handleAllClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
       report.checked = !report.checked
       return report
@@ -327,7 +334,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             })}
           </table>
         </div>
-        <Button variant="primary" type="submit">
+        <Button
+          variant="primary"
+          type="submit"
+          onClick={this.handlePayoutClick}
+        >
           Pay Selected Referral Partners
         </Button>
       </div>
