@@ -136,6 +136,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       }
       const partnerReports = await Promise.all(promises)
       for (const report of partnerReports) {
+        report.checked = false
         let remainder: number = report.totalEarned
         if (report.payouts.length > 0) {
           for (let i = 0; i < report.payouts.length; i++) {
@@ -212,12 +213,15 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       }
       return report
     })
+    // Calls the putPayout function with payoutArray as an argument
     this.putPayout(payoutArray).catch(e => {
       console.log(e)
     })
-    // Calls the putPayout function with payoutArray as an argument
     // Calls the spendPayout function with payoutArray as an argument
     // Resets payout array to empty, updates reports
+    this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
+      console.log(e)
+    })
     console.log(this.payoutArray, this.state.rates.BTC)
   }
 
