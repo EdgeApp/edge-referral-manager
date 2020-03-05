@@ -36,6 +36,10 @@ interface PartnerReferralReport {
   amountOwed: number
   apiKey: string
   checked: boolean
+  incentive: {
+    payoutAddress: string
+    payoutCurrency: string
+  }
 }
 
 interface Payout {
@@ -66,7 +70,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           installerConversions: {},
           checked: false,
           apiKey: '',
-          amountOwed: 0
+          amountOwed: 0,
+          incentive: {
+            payoutAddress: 'string',
+            payoutCurrency: 'string'
+          }
         },
         {
           totalEarned: 1,
@@ -84,7 +92,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           installerConversions: {},
           checked: false,
           apiKey: '',
-          amountOwed: 0
+          amountOwed: 0,
+          incentive: {
+            payoutAddress: 'string',
+            payoutCurrency: 'string'
+          }
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
@@ -198,10 +210,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       if (report.checked === true) {
         const amountOwedString = report.amountOwed.toString()
         const btcRateString = this.state.rates.BTC.toString()
+        const publicAddress = report.incentive.payoutAddress
         const newPayout: Payout = {
           date: new Date().toISOString(),
           dollarValue: report.amountOwed,
-          currencyCode: 'BTC',
+          currencyCode: report.incentive.payoutCurrency,
           nativeAmount: bns.div(
             bns.mul(amountOwedString, '10000000'),
             btcRateString,
@@ -209,6 +222,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           ),
           isAdjustment: true
         }
+        this.makePayment(
+          newPayout.nativeAmount,
+          newPayout.currencyCode,
+          publicAddress
+        )
         payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
       }
       return report
@@ -224,6 +242,35 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     })
     console.log(this.payoutArray, this.state.rates.BTC)
   }
+
+  makePayment = (
+    nativeAmount: string,
+    currencyCode: string,
+    publicAddress: string
+  ): void => {
+    console.log(
+      'makePayment was called',
+      this.payoutArray,
+      currencyCode,
+      nativeAmount,
+      publicAddress
+    )
+  }
+
+  //     try {
+  //       await fetch('http://localhost:8008/spend/?type=' + type,
+  //       {
+  //         body: JSON.stringify({spendTargets: [{ nativeAmount, publicAddress }]},
+  //           headers: {
+  //             'Content-Type': 'application/json'
+  //           },
+  //           method: 'POST'
+  //       }
+  //         )
+  //       )
+  //     } catch (e) {
+  //       console.log(e)
+  //     }
 
   handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     let allChecked = event.target.checked
