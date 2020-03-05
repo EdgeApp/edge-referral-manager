@@ -156,6 +156,21 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           }
         }
         report.amountOwed = remainder
+
+        // Convert currency code to type
+        switch (report.incentive.payoutCurrency) {
+          case 'BTC':
+            report.incentive.payoutCurrency = 'bitcoin'
+            break
+          case 'BCH':
+            report.incentive.payoutCurrency = 'bitcoincash'
+            break
+          case 'ETH':
+            report.incentive.payoutCurrency = 'ethereum'
+            break
+          case 'XRP':
+            report.incentive.payoutCurrency = 'ripple'
+        }
       }
       this.setState({ reports: partnerReports })
 
