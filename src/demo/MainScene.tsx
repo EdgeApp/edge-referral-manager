@@ -25,7 +25,7 @@ interface CurrencyCodes {
 
 interface CurrencyInfo {
   rate: number
-  div: number
+  div: string
   type: string
 }
 
@@ -111,22 +111,22 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       currencyCodes: {
         BTC: {
           rate: 0,
-          div: 100000000,
+          div: '100000000',
           type: 'bitcoin'
         },
         BCH: {
           rate: 0,
-          div: 100000000,
+          div: '100000000',
           type: 'bitcoincash'
         },
         ETH: {
           rate: 0,
-          div: 1000000000000000000,
+          div: '1000000000000000000',
           type: 'ethereum'
         },
         XRP: {
           rate: 0,
-          div: 1000000,
+          div: '1000000',
           type: 'ripple'
         }
       },
