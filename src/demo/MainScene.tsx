@@ -163,10 +163,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
-  putPayout = async (payoutArray = []): Promise<void> => {
+  putPayout = async (payoutArray: UpdatePayout[]): Promise<void> => {
     try {
       await fetch(
-        'http://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
+        'https://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
           CONFIG.masterKey,
         {
           body: JSON.stringify(payoutArray),
@@ -175,13 +175,23 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           },
           method: 'PUT'
         }
-      ).then(response => response.json())
+      ).then(response => {
+        if (response.ok) {
+          return this.getSummaryAsync(
+            this.state.startDate,
+            this.state.endDate
+          ).catch(e => {
+            console.log(e)
+          })
+        }
+      })
     } catch (e) {
       console.log(e)
     }
   }
 
   handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    // Creates an array of all payouts that need to be made to selected referral partners
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
       if (report.checked === true) {
@@ -202,11 +212,14 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       }
       return report
     })
+    this.putPayout(payoutArray).catch(e => {
+      console.log(e)
+    })
+    // Calls the putPayout function with payoutArray as an argument
+    // Calls the spendPayout function with payoutArray as an argument
+    // Resets payout array to empty, updates reports
     console.log(this.payoutArray, this.state.rates.BTC)
   }
-  //   this.putpayout(payoutArray)
-  //   payoutArray.map(payout => spend payment to public address) OR this.spendPayment(payoutArray)
-  //   this.setState({payoutArray: []})
 
   handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const reports: PartnerReferralReport[] = this.state.reports.map(report => {
