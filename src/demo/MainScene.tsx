@@ -24,7 +24,7 @@ interface CurrencyCodes {
 }
 
 interface CurrencyInfo {
-  rate: number
+  rate: string
   div: string
   type: string
 }
@@ -110,22 +110,22 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       endDate: '',
       currencyCodes: {
         BTC: {
-          rate: 0,
+          rate: '0',
           div: '100000000',
           type: 'bitcoin'
         },
         BCH: {
-          rate: 0,
+          rate: '0',
           div: '100000000',
           type: 'bitcoincash'
         },
         ETH: {
-          rate: 0,
+          rate: '0',
           div: '1000000000000000000',
           type: 'ethereum'
         },
         XRP: {
-          rate: 0,
+          rate: '0',
           div: '1000000',
           type: 'ripple'
         }
@@ -190,7 +190,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             '_USD&date=' +
             this.state.endDate
         ).then(response => response.json())
-        exchangeRates[code].rate = parseFloat(getRate.exchangeRate)
+        exchangeRates[code].rate = getRate.exchangeRate
       }
       this.setState({ currencyCodes: exchangeRates })
     } catch (e) {
@@ -233,9 +233,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       if (report.checked === true) {
         const amountOwedString = report.amountOwed.toString()
         const payoutCurrency = report.incentive.payoutCurrency
-        const rateString = this.state.currencyCodes[
-          payoutCurrency
-        ].rate.toString()
+        const rateString = this.state.currencyCodes[payoutCurrency].rate
         const currencyDivider = this.state.currencyCodes[payoutCurrency].div
         const currencyType = this.state.currencyCodes[payoutCurrency].type
         console.log('ratestring', rateString)
