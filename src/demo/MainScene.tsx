@@ -222,12 +222,27 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const reports: PartnerReferralReport[] = this.state.reports.map(report => {
-      report.checked = !report.checked
-      return report
-    })
-    this.setState({ reports })
-    console.log('Handle All', this.state.reports)
+    let allChecked = event.target.checked
+    if (allChecked === false) {
+      const reports: PartnerReferralReport[] = this.state.reports.map(
+        report => {
+          report.checked = false
+          allChecked = false
+          return report
+        }
+      )
+      this.setState({ reports, allChecked })
+    } else {
+      const reports: PartnerReferralReport[] = this.state.reports.map(
+        report => {
+          report.checked = true
+          allChecked = true
+          return report
+        }
+      )
+      this.setState({ reports, allChecked })
+    }
+    console.log('Handle All', this.state.reports, this.state.allChecked)
   }
 
   handleCheckClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -260,7 +275,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, reports } = this.state
+    const { startDate, endDate, reports, allChecked } = this.state
     return (
       <div>
         <h1> Edge Referral Manager </h1>
@@ -308,6 +323,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     type="checkbox"
                     className="check"
                     id="checkAll"
+                    checked={allChecked}
                     onChange={this.handleAllClick}
                   />
                   Select All
