@@ -44,10 +44,16 @@ interface Payout {
   currencyCode: string
   nativeAmount: string
   isAdjustment: boolean
+  apiKey?: string
+}
+
+interface UpdatePayout {
+  apiKey: string
+  payout: Payout
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
-  payoutArray: Payout[] = []
+  payoutArray: UpdatePayout[] = []
   constructor(props) {
     super(props)
     this.state = {
