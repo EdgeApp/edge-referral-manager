@@ -259,7 +259,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             newPayout.nativeAmount,
             currencyType,
             report.incentive.payoutAddress
-          )
+          ).catch(e => {
+            console.log(e)
+          })
           payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
         }
       }
@@ -276,11 +278,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     console.log(this.payoutArray)
   }
 
-  makePayment = (
+  makePayment = async (
     nativeAmount: string,
     currencyType: string,
     publicAddress: string
-  ): void => {
+  ): Promise<void> => {
     console.log(
       'makePayment was called',
       this.payoutArray,
@@ -288,22 +290,20 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       nativeAmount,
       publicAddress
     )
+    try {
+      await fetch('http://localhost:8008/spend/?type=' + currencyType, {
+        body: JSON.stringify({
+          spendTargets: [{ nativeAmount, publicAddress }]
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        method: 'POST'
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }
-
-  //     try {
-  //       await fetch('http://localhost:8008/spend/?type=' + type,
-  //       {
-  //         body: JSON.stringify({spendTargets: [{ nativeAmount, publicAddress }]},
-  //           headers: {
-  //             'Content-Type': 'application/json'
-  //           },
-  //           method: 'POST'
-  //       }
-  //         )
-  //       )
-  //     } catch (e) {
-  //       console.log(e)
-  //     }
 
   handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
     let allChecked = event.target.checked
