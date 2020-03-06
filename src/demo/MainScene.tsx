@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 import { bns } from 'biggystring'
 import React from 'react'
-import { Button, Form } from 'react-bootstrap'
+import { Button, Col, Form } from 'react-bootstrap'
 
 import CONFIG from './../../config.json'
 
@@ -174,10 +174,14 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         let remainder: number = report.totalEarned
         if (report.payouts.length > 0) {
           for (let i = 0; i < report.payouts.length; i++) {
-            remainder -= report.payouts[i].dollarValue
+            if (remainder > 0) {
+              remainder -= report.payouts[i].dollarValue
+            } else if (remainder <= 0) {
+              remainder = 0
+            }
           }
         }
-        report.amountOwed = remainder
+        report.amountOwed = parseFloat(remainder.toFixed(2))
       }
       this.setState({ reports: partnerReports })
 
@@ -319,7 +323,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     } else {
       const reports: PartnerReferralReport[] = this.state.reports.map(
         report => {
-          report.checked = true
+          report.amountOwed > 0
+            ? (report.checked = true)
+            : (report.checked = false)
           allChecked = true
           return report
         }
@@ -361,45 +367,52 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   render(): React.ReactNode {
     const { startDate, endDate, reports, allChecked } = this.state
     return (
-      <div>
+      <div className="text-center">
         <h1> Edge Referral Manager </h1>
         <p>
           Load a summary of payments by referral partner APIkey and make a
           payments to referral partners.
         </p>
-        <Form>
-          <Form.Group>
-            <Form.Label>Start Date</Form.Label>
-            <Form.Control
-              type="text"
-              name="startDate"
-              value={startDate}
-              onChange={this.handleStartDateChange}
-            />
-            <Form.Text className="text-muted">
-              Please enter a start date.
-            </Form.Text>
-            <Form.Label>End Date</Form.Label>
-            <Form.Control
-              type="text"
-              name="endDate"
-              value={endDate}
-              onChange={this.handleEndDateChange}
-            />
-            <Form.Text className="text-muted">
-              Please enter an end date.
-            </Form.Text>
-          </Form.Group>
+        <Form className="container">
+          <Form.Row className="row justify-content-center">
+            <Col>
+              <Form.Label>Start Date</Form.Label>
+              <Form.Control
+                type="text"
+                name="startDate"
+                value={startDate}
+                onChange={this.handleStartDateChange}
+              />
+              <Form.Text className="text-muted">
+                Please enter a start date.
+              </Form.Text>
+            </Col>
+            <Col>
+              <Form.Label>End Date</Form.Label>
+              <Form.Control
+                type="text"
+                name="endDate"
+                value={endDate}
+                onChange={this.handleEndDateChange}
+              />
+              <Form.Text className="text-muted">
+                Please enter an end date.
+              </Form.Text>
+            </Col>
+          </Form.Row>
         </Form>
+
         <Button
           variant="primary"
           type="submit"
           onClick={this.handleSummaryClick}
+          size="lg"
         >
           Get a Summary
         </Button>
+
         <div className="container">
-          <table role="form" className="table table-responsive text-wrap">
+          <table role="form" className="table table-responsive text-centered">
             <thead className="thead-dark">
               <tr>
                 <th className="checkbox">
@@ -428,20 +441,32 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 <tbody key={index}>
                   <tr>
                     <th className="checkbox">
-                      <input
-                        type="checkbox"
-                        className="check"
-                        aria-label="Checkbox for following text input"
-                        checked={report.checked}
-                        onChange={this.handleCheckClick}
-                        name={report.apiKey}
-                      />
+                      {report.amountOwed > 0 ? (
+                        <input
+                          type="checkbox"
+                          className="check"
+                          aria-label="Checkbox for following text input"
+                          checked={report.checked}
+                          onChange={this.handleCheckClick}
+                          name={report.apiKey}
+                        />
+                      ) : (
+                        <input
+                          type="checkbox"
+                          className="check"
+                          aria-label="Checkbox for following text input"
+                          checked={report.checked}
+                          onChange={this.handleCheckClick}
+                          name={report.apiKey}
+                          disabled
+                        />
+                      )}
                     </th>
                     <td>{name[0]}</td>
                     <td>{report.installerConversionCount}</td>
                     <td>{report.installerSignupCount}</td>
                     <td>{report.amountOwed}</td>
-                    <td>{report.totalEarned}</td>
+                    <td>{report.totalEarned.toFixed(2)}</td>
                   </tr>
                 </tbody>
               )
