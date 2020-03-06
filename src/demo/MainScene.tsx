@@ -203,6 +203,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   putPayout = async (payoutArray: UpdatePayout[]): Promise<void> => {
+    console.log('put payout click was called', this.payoutArray)
     try {
       await fetch(
         'https://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
@@ -279,7 +280,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
     })
-    console.log(this.payoutArray)
+    console.log('handle payout click was called', this.payoutArray)
   }
 
   makePayment = async (
