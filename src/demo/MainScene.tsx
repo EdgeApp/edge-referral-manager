@@ -12,21 +12,15 @@ interface MainSceneState {
   partners: PartnerObject[]
   startDate: string
   endDate: string
-  currencyCodes: CurrencyCodes
+  rates: Rates
   allChecked: boolean
 }
 
-interface CurrencyCodes {
-  BTC: CurrencyInfo
-  BCH: CurrencyInfo
-  ETH: CurrencyInfo
-  XRP: CurrencyInfo
-}
-
-interface CurrencyInfo {
-  rate: string
-  div: string
-  type: string
+interface Rates {
+  BTC: string
+  BCH: string
+  ETH: string
+  XRP: string
 }
 
 interface PartnerObject {
@@ -60,6 +54,25 @@ interface Payout {
 interface UpdatePayout {
   apiKey: string
   payout: Payout
+}
+
+const currencyInfo = {
+  BTC: {
+    div: '100000000',
+    type: 'bitcoin'
+  },
+  BCH: {
+    div: '100000000',
+    type: 'bitcoincash'
+  },
+  ETH: {
+    div: '1000000000000000000',
+    type: 'ethereum'
+  },
+  XRP: {
+    div: '1000000',
+    type: 'ripple'
+  }
 }
 
 export class MainScene extends React.Component<{}, MainSceneState> {
@@ -108,27 +121,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate: '',
       endDate: '',
-      currencyCodes: {
-        BTC: {
-          rate: '0',
-          div: '100000000',
-          type: 'bitcoin'
-        },
-        BCH: {
-          rate: '0',
-          div: '100000000',
-          type: 'bitcoincash'
-        },
-        ETH: {
-          rate: '0',
-          div: '1000000000000000000',
-          type: 'ethereum'
-        },
-        XRP: {
-          rate: '0',
-          div: '1000000',
-          type: 'ripple'
-        }
+      rates: {
+        BTC: '0',
+        BCH: '0',
+        ETH: '0',
+        XRP: '0'
       },
       allChecked: false
     }
@@ -186,7 +183,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       this.setState({ reports: partnerReports })
 
       // Get Exchange Rates for supported payout currencies
-      const exchangeRates: CurrencyCodes = this.state.currencyCodes
+      const exchangeRates: Rates = this.state.rates
       for (const code of Object.keys(exchangeRates)) {
         const getRate: any = await fetch(
           'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
@@ -194,9 +191,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             '_USD&date=' +
             this.state.endDate
         ).then(response => response.json())
-        exchangeRates[code].rate = getRate.exchangeRate
+        exchangeRates[code] = getRate.exchangeRate
       }
-      this.setState({ currencyCodes: exchangeRates })
+      this.setState({ rates: exchangeRates })
     } catch (e) {
       console.log(e)
     }
@@ -243,9 +240,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         ) {
           const amountOwedString = report.amountOwed.toString()
           const payoutCurrency = report.incentive.payoutCurrency
-          const rateString = this.state.currencyCodes[payoutCurrency].rate
-          const currencyDivider = this.state.currencyCodes[payoutCurrency].div
-          const currencyType = this.state.currencyCodes[payoutCurrency].type
+          const rateString = this.state.rates[payoutCurrency]
+          const currencyDivider = currencyInfo[payoutCurrency].div
+          const currencyType = currencyInfo[payoutCurrency].type
           console.log('ratestring', rateString)
           // Creates a new payout object to update the database
           const newPayout: Payout = {
