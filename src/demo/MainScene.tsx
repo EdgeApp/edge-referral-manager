@@ -235,7 +235,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
       // Pays only the referral partners who have checkboxes
-      if (report.checked === true) {
+      if (report.checked === true && report.amountOwed > 0) {
         // Pays only the checked referral partners who have a payoutaddress and currency
         if (
           typeof report.incentive.payoutCurrency === 'string' &&
@@ -252,10 +252,14 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             date: new Date().toISOString(),
             dollarValue: report.amountOwed,
             currencyCode: payoutCurrency,
-            nativeAmount: bns.div(
-              bns.mul(amountOwedString, currencyDivider),
-              rateString,
-              16
+            nativeAmount: bns.toFixed(
+              bns.div(
+                bns.mul(amountOwedString, currencyDivider),
+                rateString,
+                16
+              ),
+              0,
+              0
             ),
             isAdjustment: true
           }
