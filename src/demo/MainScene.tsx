@@ -425,7 +425,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         </Button>
 
         <div className="container">
-          <table role="form" className="table table-responsive text-centered">
+          <table
+            role="form"
+            className="table table-responsive table-fit text-centered"
+          >
             <thead className="thead-dark">
               <tr>
                 <th className="checkbox">
