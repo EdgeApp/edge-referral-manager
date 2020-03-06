@@ -203,6 +203,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   putPayout = async (payoutArray: UpdatePayout[]): Promise<void> => {
+    console.log('put payout click was called', this.payoutArray)
     try {
       await fetch(
         'https://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
@@ -234,7 +235,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
       // Pays only the referral partners who have checkboxes
-      if (report.checked === true) {
+      if (report.checked === true && report.amountOwed > 0) {
         // Pays only the checked referral partners who have a payoutaddress and currency
         if (
           typeof report.incentive.payoutCurrency === 'string' &&
@@ -251,10 +252,14 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             date: new Date().toISOString(),
             dollarValue: report.amountOwed,
             currencyCode: payoutCurrency,
-            nativeAmount: bns.div(
-              bns.mul(amountOwedString, currencyDivider),
-              rateString,
-              16
+            nativeAmount: bns.toFixed(
+              bns.div(
+                bns.mul(amountOwedString, currencyDivider),
+                rateString,
+                16
+              ),
+              0,
+              0
             ),
             isAdjustment: true
           }
@@ -279,7 +284,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
     })
-    console.log(this.payoutArray)
+    console.log('handle payout click was called', this.payoutArray)
   }
 
   makePayment = async (
