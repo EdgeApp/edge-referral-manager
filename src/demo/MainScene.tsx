@@ -79,6 +79,17 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   payoutArray: UpdatePayout[] = []
   constructor(props) {
     super(props)
+    // first day of the month
+    var today = new Date()
+    var lastMonth = new Date(today.setUTCMonth(today.getMonth() - 1))
+    var firstDay = new Date(lastMonth.setDate(1))
+    var startDateString = firstDay.toISOString()
+    var startDate = startDateString.split('T')[0]
+    // last day of the month
+    var lastMonth2 = new Date()
+    var lastDay = new Date(lastMonth2.setDate(1))
+    var endDateString = lastDay.toISOString()
+    var endDate = endDateString.split('T')[0]
     this.state = {
       reports: [
         {
@@ -119,8 +130,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         }
       ],
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
-      startDate: '',
-      endDate: '',
+      startDate,
+      endDate,
       rates: {
         BTC: '0',
         BCH: '0',
