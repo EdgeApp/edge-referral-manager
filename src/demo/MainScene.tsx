@@ -378,7 +378,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   render(): React.ReactNode {
-    const { startDate, endDate, reports, allChecked } = this.state
+    const { startDate, endDate, reports, allChecked, rates } = this.state
     return (
       <div className="text-center">
         <h1> Edge Referral Manager </h1>
@@ -425,10 +425,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         </Button>
 
         <div className="container">
-          <table
-            role="form"
-            className="table table-responsive table-fit text-centered"
-          >
+          <table role="form" className="table table-fit text-centered">
             <thead className="thead-dark">
               <tr>
                 <th className="checkbox">
@@ -446,6 +443,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 <th>Installer SignUp Count:</th>
                 <th>Amount Owed:</th>
                 <th>Total Earned:</th>
+                <th>Crypto Amount:</th>
+                <th>Payout Address:</th>
               </tr>
             </thead>
             {reports.map((report: PartnerReferralReport, index) => {
@@ -483,6 +482,19 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{report.installerSignupCount}</td>
                     <td>{report.amountOwed}</td>
                     <td>{report.totalEarned.toFixed(2)}</td>
+                    <td>
+                      {(
+                        report.amountOwed /
+                        rates[report.incentive.payoutCurrency]
+                      ).toFixed(2) +
+                        ' ' +
+                        report.incentive.payoutCurrency}
+                    </td>
+                    <td>
+                      {typeof report.incentive.payoutAddress === 'string'
+                        ? report.incentive.payoutAddress.substring(0, 6)
+                        : ''}
+                    </td>
                   </tr>
                 </tbody>
               )
