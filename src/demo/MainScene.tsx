@@ -279,6 +279,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             isAdjustment: true
           }
           payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
+          currencyInfo[payoutCurrency].spendTargets.push({
+            nativeAmount: amountOwedString,
+            publicAddress: report.incentive.payoutAddress
+          })
         }
       }
       return report
