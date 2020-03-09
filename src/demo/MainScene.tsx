@@ -14,6 +14,9 @@ interface MainSceneState {
   endDate: string
   rates: Rates
   allChecked: boolean
+  offlineApiKey: string
+  offlineDollarValue: string
+  offlineCurrencyCode: string
 }
 
 interface Rates {
@@ -124,7 +127,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         ETH: '0',
         XRP: '0'
       },
-      allChecked: false
+      allChecked: false,
+      offlineApiKey: '',
+      offlineDollarValue: '0',
+      offlineCurrencyCode: ''
     }
   }
 
@@ -299,7 +305,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     spendTargets: string[]
   ): Promise<void> => {
     try {
-      await fetch('http://localhost:8008/spend/?type=' + currencyType, {
+      await fetch('/spend/?type=' + currencyType, {
         body: JSON.stringify({
           spendTargets
         }),
@@ -311,6 +317,42 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     } catch (e) {
       console.log(e)
     }
+  }
+
+  handleOfflineClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    // Creates an array of all payouts that need to be made to selected referral partners
+    const amountOwedString = this.state.offlineDollarValue
+    const apiKey = this.state.offlineApiKey
+    const payoutCurrency = this.state.offlineCurrencyCode
+    const rateString = this.state.rates[payoutCurrency]
+    const currencyDivider = currencyInfo[payoutCurrency].div
+    const payoutArray: UpdatePayout[] = [
+      {
+        apiKey: apiKey,
+        payout: {
+          date: new Date().toISOString(),
+          dollarValue: parseFloat(this.state.offlineDollarValue),
+          currencyCode: payoutCurrency,
+          nativeAmount: bns.toFixed(
+            bns.div(bns.mul(amountOwedString, currencyDivider), rateString, 16),
+            0,
+            0
+          ),
+          isAdjustment: true
+        }
+      }
+    ]
+    // Calls the putPayout function with payoutArray as an argument
+    this.putPayout(payoutArray).catch(e => {
+      console.log(e)
+    })
+    console.log('handle offline payout click was called', payoutArray)
+    this.setState({
+      offlineApiKey: '',
+      offlineCurrencyCode: '',
+      offlineDollarValue: '0'
+    })
+    console.log('setState was called', payoutArray)
   }
 
   handleAllClick = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -368,8 +410,32 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     this.setState({ endDate })
   }
 
+  handleOfflineDollarChange = (event: any): void => {
+    const offlineDollarValue = event.target.value
+    this.setState({ offlineDollarValue })
+  }
+
+  handleOfflineApiKey = (event: any): void => {
+    const offlineApiKey = event.target.value
+    this.setState({ offlineApiKey })
+  }
+
+  handleOfflineCurrencyCode = (event: any): void => {
+    const offlineCurrencyCode = event.target.value
+    this.setState({ offlineCurrencyCode })
+  }
+
   render(): React.ReactNode {
-    const { startDate, endDate, reports, allChecked, rates } = this.state
+    const {
+      startDate,
+      endDate,
+      reports,
+      allChecked,
+      rates,
+      offlineDollarValue,
+      offlineApiKey,
+      offlineCurrencyCode
+    } = this.state
     return (
       <div className="py-3 text-center">
         <h1> Edge Referral Manager </h1>
@@ -513,6 +579,61 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         >
           Pay Selected Referral Partners
         </Button>
+        <div>
+          <h4 className="pt-5"> Make an Offline Adjustment</h4>
+          <p>
+            {' '}
+            The referral partner will not receive a direct payment, but a
+            payment will be added to the payout records.{' '}
+          </p>
+          <Form className="container">
+            <Form.Row className="row justify-content-center">
+              <Col>
+                <Form.Label>Amount Owed</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="dollarValue"
+                  value={offlineDollarValue}
+                  onChange={this.handleOfflineDollarChange}
+                />
+                <Form.Text className="text-muted">
+                  Please enter the amount owed in dollar value.
+                </Form.Text>
+              </Col>
+              <Col>
+                <Form.Label>API Key</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="endDate"
+                  value={offlineApiKey}
+                  onChange={this.handleOfflineApiKey}
+                />
+                <Form.Text className="text-muted">
+                  Please enter the API key of the referral partner.
+                </Form.Text>
+              </Col>
+              <Col>
+                <Form.Label>Currency Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="endDate"
+                  value={offlineCurrencyCode}
+                  onChange={this.handleOfflineCurrencyCode}
+                />
+                <Form.Text className="text-muted">
+                  Please enter the currency code of the referral partner.
+                </Form.Text>
+              </Col>
+            </Form.Row>
+          </Form>
+          <Button
+            variant="primary"
+            type="submit"
+            onClick={this.handleOfflineClick}
+          >
+            Make an offline payment
+          </Button>
+        </div>
       </div>
     )
   }
