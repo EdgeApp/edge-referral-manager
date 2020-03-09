@@ -254,7 +254,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               0,
               0
             ),
-            isAdjustment: true
+            isAdjustment: false
           }
           payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
           currencyInfo[payoutCurrency].spendTargets.push({
