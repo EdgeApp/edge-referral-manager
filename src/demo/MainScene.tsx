@@ -500,6 +500,17 @@ export class MainScene extends React.Component<{}, MainSceneState> {
               )
             })}
           </table>
+          <table role="form" className="table table-fit text-centered">
+            <thead className="thead-dark">
+              <tr>
+                <th>BTC</th>
+                <th>BCH</th>
+                <th>ETH</th>
+                <th>XRP</th>
+              </tr>
+            </thead>
+            {this.renderSumArea()}
+          </table>
         </div>
         <Button
           variant="primary"
@@ -509,6 +520,60 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           Pay Selected Referral Partners
         </Button>
       </div>
+    )
+  }
+
+  renderSumArea(): React.ReactNode {
+    const { reports, rates } = this.state
+    var sumBTC = 0
+    var sumBCH = 0
+    var sumETH = 0
+    var sumXRP = 0
+    for (const report of reports) {
+      if (
+        report.incentive.payoutCurrency === 'BTC' &&
+        report.checked === true
+      ) {
+        sumBTC +=
+          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+      }
+    }
+    for (const report of reports) {
+      if (
+        report.incentive.payoutCurrency === 'BCH' &&
+        report.checked === true
+      ) {
+        sumBCH +=
+          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+      }
+    }
+    for (const report of reports) {
+      if (
+        report.incentive.payoutCurrency === 'ETH' &&
+        report.checked === true
+      ) {
+        sumETH +=
+          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+      }
+    }
+    for (const report of reports) {
+      if (
+        report.incentive.payoutCurrency === 'XRP' &&
+        report.checked === true
+      ) {
+        sumXRP +=
+          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+      }
+    }
+    return (
+      <tbody>
+        <tr>
+          <td>{sumBTC.toFixed(2)}</td>
+          <td>{sumBCH.toFixed(2)}</td>
+          <th>{sumETH.toFixed(2)}</th>
+          <th>{sumXRP.toFixed(2)}</th>
+        </tr>
+      </tbody>
     )
   }
 }
