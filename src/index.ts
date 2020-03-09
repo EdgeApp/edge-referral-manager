@@ -35,6 +35,7 @@ async function main(): Promise<void> {
 
   app.use(bodyParser.json({ limit: '1mb' }))
   app.use(cors())
+  app.use('/', express.static('dist'))
 
   // Getting wallet balances based on type of wallet
   app.get('/balances/', async (req, res, next) => {
