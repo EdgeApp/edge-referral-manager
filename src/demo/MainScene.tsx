@@ -59,19 +59,27 @@ interface UpdatePayout {
 const currencyInfo = {
   BTC: {
     div: '100000000',
-    type: 'bitcoin'
+    type: 'bitcoin',
+    batchSize: 10,
+    spendTargets: []
   },
   BCH: {
     div: '100000000',
-    type: 'bitcoincash'
+    type: 'bitcoincash',
+    batchSize: 10,
+    spendTargets: []
   },
   ETH: {
     div: '1000000000000000000',
-    type: 'ethereum'
+    type: 'ethereum',
+    batchSize: 1,
+    spendTargets: []
   },
   XRP: {
     div: '1000000',
-    type: 'ripple'
+    type: 'ripple',
+    batchSize: 1,
+    spendTargets: []
   }
 }
 
@@ -253,7 +261,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           const payoutCurrency = report.incentive.payoutCurrency
           const rateString = this.state.rates[payoutCurrency]
           const currencyDivider = currencyInfo[payoutCurrency].div
-          const currencyType = currencyInfo[payoutCurrency].type
           console.log('ratestring', rateString)
           // Creates a new payout object to update the database
           const newPayout: Payout = {
@@ -271,19 +278,33 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             ),
             isAdjustment: true
           }
-          // Calls the make payment function with amount, wallet type, and payoutaddress
-          this.makePayment(
-            newPayout.nativeAmount,
-            currencyType,
-            report.incentive.payoutAddress
-          ).catch(e => {
-            console.log(e)
-          })
           payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
+          currencyInfo[payoutCurrency].spendTargets.push({
+            nativeAmount: amountOwedString,
+            publicAddress: report.incentive.payoutAddress
+          })
         }
       }
       return report
     })
+    // Batches payments according to batchSize and sends to makePayment
+    for (const code of Object.keys(currencyInfo)) {
+      let index = currencyInfo[code].spendTargets.length
+      while (index > 0) {
+        const spend: string[] = []
+        for (let i = 0; i < currencyInfo[code].batchSize; i++) {
+          spend.push(currencyInfo[code].spendTargets.shift())
+          if (currencyInfo[code].spendTargets.length === 0) {
+            break
+          }
+        }
+        this.makePayment(currencyInfo[code].type, spend).catch(e => {
+          console.log(e)
+        })
+        index -= currencyInfo[code].batchSize
+        console.log('spend' + code + JSON.stringify(spend))
+      }
+    }
     // Calls the putPayout function with payoutArray as an argument
     this.putPayout(payoutArray).catch(e => {
       console.log(e)
@@ -296,21 +317,13 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   }
 
   makePayment = async (
-    nativeAmount: string,
     currencyType: string,
-    publicAddress: string
+    spendTargets: string[]
   ): Promise<void> => {
-    console.log(
-      'makePayment was called',
-      this.payoutArray,
-      currencyType,
-      nativeAmount,
-      publicAddress
-    )
     try {
       await fetch('http://localhost:8008/spend/?type=' + currencyType, {
         body: JSON.stringify({
-          spendTargets: [{ nativeAmount, publicAddress }]
+          spendTargets
         }),
         headers: {
           'Content-Type': 'application/json'
