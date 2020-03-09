@@ -110,30 +110,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           apiKey: '',
           amountOwed: 0,
           incentive: {
-            payoutAddress: 'string',
-            payoutCurrency: 'string'
-          }
-        },
-        {
-          totalEarned: 1,
-          installerConversionCount: 1,
-          installerSignupCount: 1,
-          payouts: [
-            {
-              date: '2020-02-20T00:00:00.000Z',
-              dollarValue: 0.1,
-              currencyCode: 'ETH',
-              nativeAmount: '1000000000',
-              isAdjustment: false
-            }
-          ],
-          installerConversions: {},
-          checked: false,
-          apiKey: '',
-          amountOwed: 0,
-          incentive: {
-            payoutAddress: 'string',
-            payoutCurrency: 'string'
+            payoutAddress: '',
+            payoutCurrency: ''
           }
         }
       ],
@@ -393,13 +371,13 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   render(): React.ReactNode {
     const { startDate, endDate, reports, allChecked, rates } = this.state
     return (
-      <div className="text-center">
+      <div className="py-3 text-center">
         <h1> Edge Referral Manager </h1>
         <p>
           Load a summary of payments by referral partner APIkey and make a
           payments to referral partners.
         </p>
-        <Form className="container">
+        <Form className="pt-5 container">
           <Form.Row className="row justify-content-center">
             <Col>
               <Form.Label>Start Date</Form.Label>
@@ -437,7 +415,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           Get a Summary
         </Button>
 
-        <div className="container">
+        <div className="pt-5 pb-3 container">
           <table role="form" className="table table-fit text-centered">
             <thead className="thead-dark">
               <tr>
@@ -496,12 +474,15 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{report.amountOwed}</td>
                     <td>{report.totalEarned.toFixed(2)}</td>
                     <td>
-                      {(
-                        report.amountOwed /
-                        rates[report.incentive.payoutCurrency]
-                      ).toFixed(2) +
-                        ' ' +
-                        report.incentive.payoutCurrency}
+                      {report.amountOwed > 0 &&
+                      typeof report.incentive.payoutCurrency === 'string'
+                        ? (
+                            report.amountOwed /
+                            rates[report.incentive.payoutCurrency]
+                          ).toFixed(2) +
+                          ' ' +
+                          report.incentive.payoutCurrency
+                        : ''}
                     </td>
                     <td>
                       {typeof report.incentive.payoutAddress === 'string'
