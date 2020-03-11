@@ -187,12 +187,13 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
       // Get Exchange Rates for supported payout currencies
       const exchangeRates: Rates = this.state.rates
+      const today: string = new Date().toISOString()
       for (const code of Object.keys(exchangeRates)) {
         const getRate: any = await fetch(
           'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
             code +
             '_USD&date=' +
-            this.state.endDate
+            today
         ).then(response => response.json())
         exchangeRates[code] = getRate.exchangeRate
       }
