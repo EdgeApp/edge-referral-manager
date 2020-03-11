@@ -150,15 +150,16 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       const promises: Array<Promise<PartnerReferralReport>> = []
       for (const partner of partners) {
         if (partner.apiKey != null) {
-          const promise = fetch(
+          let uri =
             'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
-              partner.apiKey +
-              '&startDate=' +
-              startDate +
-              '&endDate=' +
-              endDate,
-            { method: 'GET' }
-          )
+            partner.apiKey
+          if (startDate !== '') {
+            uri += '&startDate=' + startDate
+          }
+          if (endDate !== '') {
+            uri += '&endDate=' + endDate
+          }
+          const promise = fetch(uri, { method: 'GET' })
             .then(response => response.json())
             .then(jsonResponse => ({
               ...jsonResponse,
@@ -187,12 +188,13 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
       // Get Exchange Rates for supported payout currencies
       const exchangeRates: Rates = this.state.rates
+      const today: string = new Date().toISOString()
       for (const code of Object.keys(exchangeRates)) {
         const getRate: any = await fetch(
           'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
             code +
             '_USD&date=' +
-            this.state.endDate
+            today
         ).then(response => response.json())
         exchangeRates[code] = getRate.exchangeRate
       }
