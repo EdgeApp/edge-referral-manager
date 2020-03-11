@@ -150,15 +150,16 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       const promises: Array<Promise<PartnerReferralReport>> = []
       for (const partner of partners) {
         if (partner.apiKey != null) {
-          const promise = fetch(
+          let uri =
             'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
-              partner.apiKey +
-              '&startDate=' +
-              startDate +
-              '&endDate=' +
-              endDate,
-            { method: 'GET' }
-          )
+            partner.apiKey
+          if (startDate !== '') {
+            uri += '&startDate=' + startDate
+          }
+          if (endDate !== '') {
+            uri += '&endDate=' + endDate
+          }
+          const promise = fetch(uri, { method: 'GET' })
             .then(response => response.json())
             .then(jsonResponse => ({
               ...jsonResponse,
