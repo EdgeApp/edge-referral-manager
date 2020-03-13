@@ -55,32 +55,38 @@ interface Payout {
 interface UpdatePayout {
   apiKey: string
   payout: Payout
+  spendTarget: SpendTarget
+}
+
+interface Spend {
+  [currencyCode: string]: UpdatePayout[]
+}
+
+interface SpendTarget {
+  nativeAmount: string
+  publicAddress: string
 }
 
 const currencyInfo = {
   BTC: {
     div: '100000000',
     type: 'bitcoin',
-    batchSize: 10,
-    spendTargets: []
+    batchSize: 10
   },
   BCH: {
     div: '100000000',
     type: 'bitcoincash',
-    batchSize: 10,
-    spendTargets: []
+    batchSize: 10
   },
   ETH: {
     div: '1000000000000000000',
     type: 'ethereum',
-    batchSize: 1,
-    spendTargets: []
+    batchSize: 1
   },
   XRP: {
     div: '1000000',
     type: 'ripple',
-    batchSize: 1,
-    spendTargets: []
+    batchSize: 1
   }
 }
 
@@ -244,6 +250,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           const amountOwedString = report.amountOwed.toString()
           const payoutCurrency = report.incentive.payoutCurrency
           const rateString = this.state.rates[payoutCurrency]
+          if (rateString == null) {
+            return
+          }
           const currencyDivider = currencyInfo[payoutCurrency].div
           console.log('ratestring', rateString)
           // Creates a new payout object to update the database
@@ -262,37 +271,61 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             ),
             isAdjustment: false
           }
-          payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
-          currencyInfo[payoutCurrency].spendTargets.push({
-            nativeAmount: amountOwedString,
+          const spendTarget = {
+            nativeAmount: newPayout.nativeAmount,
             publicAddress: report.incentive.payoutAddress
+          }
+          payoutArray.push({
+            apiKey: report.apiKey,
+            payout: newPayout,
+            spendTarget
           })
         }
       }
       return report
     })
     // Batches payments according to batchSize and sends to makePayment
-    for (const code of Object.keys(currencyInfo)) {
-      let index = currencyInfo[code].spendTargets.length
-      while (index > 0) {
-        const spend: string[] = []
+    const spendObject: Spend = {}
+    for (const payout of payoutArray) {
+      const code = payout.payout.currencyCode
+      if (spendObject[code] == null) {
+        spendObject[code] = []
+      }
+      spendObject[code].push(payout)
+    }
+    for (const code of Object.keys(spendObject)) {
+      console.log(
+        'MainScene -> numTransactions',
+        spendObject[code].length,
+        code
+      )
+      while (spendObject[code].length > 0) {
+        const spend: SpendTarget[] = []
+        const pay: any[] = []
         for (let i = 0; i < currencyInfo[code].batchSize; i++) {
-          spend.push(currencyInfo[code].spendTargets.shift())
-          if (currencyInfo[code].spendTargets.length === 0) {
-            break
+          const item = spendObject[code].shift()
+          if (item != null) {
+            spend.push(item.spendTarget)
+            pay.push({
+              apiKey: item.apiKey,
+              payout: item.payout
+            })
           }
         }
-        this.makePayment(currencyInfo[code].type, spend).catch(e => {
+        try {
+          await this.makePayment(currencyInfo[code].type, spend)
+          console.log('spend' + code + JSON.stringify(spend))
+          await this.putPayout(pay)
+          console.log('pay' + code + JSON.stringify(pay))
+        } catch (e) {
           console.log(e)
-        })
-        index -= currencyInfo[code].batchSize
-        console.log('spend' + code + JSON.stringify(spend))
+          const error: string = this.state.error + `<br><br>\n\n${e.message}`
+          this.setState({ error })
+          console.log(this.state.error)
+          console.log(JSON.stringify(e))
+        }
       }
     }
-    // Calls the putPayout function with payoutArray as an argument
-    this.putPayout(payoutArray).catch(e => {
-      console.log(e)
-    })
     // Resets payout array to empty, updates reports
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
@@ -302,13 +335,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
   makePayment = async (
     currencyType: string,
-    spendTargets: string[]
+    spendTargets: SpendTarget[]
   ): Promise<void> => {
     try {
       await fetch('/spend/?type=' + currencyType, {
-        body: JSON.stringify({
-          spendTargets
-        }),
+        body: JSON.stringify({ spendTargets }),
         headers: {
           'Content-Type': 'application/json'
         },
@@ -316,6 +347,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       })
     } catch (e) {
       console.log(e)
+      throw new Error('makePayment filed: ' + JSON.stringify(spendTargets))
     }
   }
 
@@ -339,6 +371,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             0
           ),
           isAdjustment: true
+        },
+        spendTarget: {
+          nativeAmount: '', // can be blank
+          publicAddress: '' // can be blank
         }
       }
     ]
