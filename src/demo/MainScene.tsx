@@ -224,18 +224,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           },
           method: 'PUT'
         }
-      ).then(response => {
-        if (response.ok) {
-          return this.getSummaryAsync(
-            this.state.startDate,
-            this.state.endDate
-          ).catch(e => {
-            console.log(e)
-          })
-        }
-      })
+      )
     } catch (e) {
-      console.log(e)
+      throw new Error('putPayout failed ' + JSON.stringify(payoutArray))
     }
   }
 
