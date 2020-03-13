@@ -37,6 +37,7 @@ interface PartnerReferralReport {
   installerSignupCount: number
   installerConversions: {}
   amountOwed: number
+  amountOwedCrypto: string
   apiKey: string
   checked: boolean
   incentive: {
@@ -112,6 +113,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           checked: false,
           apiKey: '',
           amountOwed: 0,
+          amountOwedCrypto: '0',
           incentive: {
             payoutAddress: '',
             payoutCurrency: ''
@@ -169,6 +171,23 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           promises.push(promise)
         }
       }
+      // Get Exchange Rates for supported payout currencies
+      const exchangeRates: Rates = this.state.rates
+      const today: string = new Date().toISOString()
+      for (const code of Object.keys(currencyInfo)) {
+        const getRate: any = await fetch(
+          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
+            code +
+            '_USD&date=' +
+            today
+        ).then(response => response.json())
+        if (exchangeRates[code] == null) {
+          exchangeRates[code] = ''
+        }
+        exchangeRates[code] = getRate.exchangeRate
+      }
+      console.log(JSON.stringify(exchangeRates))
+      this.setState({ rates: exchangeRates })
       const partnerReports = await Promise.all(promises)
       for (const report of partnerReports) {
         report.checked = false
@@ -183,22 +202,18 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           }
         }
         report.amountOwed = parseFloat(remainder.toFixed(2))
+        if (this.state.rates[report.incentive.payoutCurrency] != null) {
+          report.amountOwedCrypto = bns.div(
+            report.amountOwed.toString(),
+            this.state.rates[report.incentive.payoutCurrency],
+            8
+          )
+        } else {
+          report.amountOwedCrypto = ''
+          report.incentive.payoutCurrency = 'No currency code'
+        }
       }
       this.setState({ reports: partnerReports })
-
-      // Get Exchange Rates for supported payout currencies
-      const exchangeRates: Rates = this.state.rates
-      const today: string = new Date().toISOString()
-      for (const code of Object.keys(exchangeRates)) {
-        const getRate: any = await fetch(
-          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
-            code +
-            '_USD&date=' +
-            today
-        ).then(response => response.json())
-        exchangeRates[code] = getRate.exchangeRate
-      }
-      this.setState({ rates: exchangeRates })
     } catch (e) {
       console.log(e)
     }
@@ -542,15 +557,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{report.amountOwed}</td>
                     <td>{report.totalEarned.toFixed(2)}</td>
                     <td>
-                      {report.amountOwed > 0 &&
-                      typeof report.incentive.payoutCurrency === 'string'
-                        ? (
-                            report.amountOwed /
-                            rates[report.incentive.payoutCurrency]
-                          ).toFixed(2) +
-                          ' ' +
-                          report.incentive.payoutCurrency
-                        : ''}
+                      {`${report.amountOwedCrypto} ${report.incentive.payoutCurrency}`}
                     </td>
                     <td>
                       {typeof report.incentive.payoutAddress === 'string'
