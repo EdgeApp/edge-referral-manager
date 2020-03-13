@@ -236,7 +236,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     }
   }
 
-  handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handlePayoutClick = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ): Promise<void> => {
     // Creates an array of all payouts that need to be made to selected referral partners
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
