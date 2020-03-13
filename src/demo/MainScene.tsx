@@ -319,9 +319,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           console.log('pay' + code + JSON.stringify(pay))
         } catch (e) {
           console.log(e)
-          const error: string = this.state.error + `<br><br>\n\n${e.message}`
-          this.setState({ error })
-          console.log(this.state.error)
           console.log(JSON.stringify(e))
         }
       }
