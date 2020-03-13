@@ -20,10 +20,7 @@ interface MainSceneState {
 }
 
 interface Rates {
-  BTC: string
-  BCH: string
-  ETH: string
-  XRP: string
+  [currencyCode: string]: string
 }
 
 interface PartnerObject {
@@ -123,12 +120,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate,
       endDate,
-      rates: {
-        BTC: '0',
-        BCH: '0',
-        ETH: '0',
-        XRP: '0'
-      },
+      rates: {},
       allChecked: false,
       offlineApiKey: '',
       offlineDollarValue: '0',
@@ -448,7 +440,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       endDate,
       reports,
       allChecked,
-      rates,
       offlineDollarValue,
       offlineApiKey,
       offlineCurrencyCode
