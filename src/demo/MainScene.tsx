@@ -20,10 +20,7 @@ interface MainSceneState {
 }
 
 interface Rates {
-  BTC: string
-  BCH: string
-  ETH: string
-  XRP: string
+  [currencyCode: string]: string
 }
 
 interface PartnerObject {
@@ -37,6 +34,7 @@ interface PartnerReferralReport {
   installerSignupCount: number
   installerConversions: {}
   amountOwed: number
+  amountOwedCrypto: string
   apiKey: string
   checked: boolean
   incentive: {
@@ -57,32 +55,38 @@ interface Payout {
 interface UpdatePayout {
   apiKey: string
   payout: Payout
+  spendTarget: SpendTarget
+}
+
+interface Spend {
+  [currencyCode: string]: UpdatePayout[]
+}
+
+interface SpendTarget {
+  nativeAmount: string
+  publicAddress: string
 }
 
 const currencyInfo = {
   BTC: {
     div: '100000000',
     type: 'bitcoin',
-    batchSize: 10,
-    spendTargets: []
+    batchSize: 10
   },
   BCH: {
     div: '100000000',
     type: 'bitcoincash',
-    batchSize: 10,
-    spendTargets: []
+    batchSize: 10
   },
   ETH: {
     div: '1000000000000000000',
     type: 'ethereum',
-    batchSize: 1,
-    spendTargets: []
+    batchSize: 1
   },
   XRP: {
     div: '1000000',
     type: 'ripple',
-    batchSize: 1,
-    spendTargets: []
+    batchSize: 1
   }
 }
 
@@ -112,6 +116,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           checked: false,
           apiKey: '',
           amountOwed: 0,
+          amountOwedCrypto: '0',
           incentive: {
             payoutAddress: '',
             payoutCurrency: ''
@@ -121,12 +126,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       partners: [{ apiKey: 'key 1' }, { apiKey: 'key 2' }],
       startDate,
       endDate,
-      rates: {
-        BTC: '0',
-        BCH: '0',
-        ETH: '0',
-        XRP: '0'
-      },
+      rates: {},
       allChecked: false,
       offlineApiKey: '',
       offlineDollarValue: '0',
@@ -169,6 +169,23 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           promises.push(promise)
         }
       }
+      // Get Exchange Rates for supported payout currencies
+      const exchangeRates: Rates = this.state.rates
+      const today: string = new Date().toISOString()
+      for (const code of Object.keys(currencyInfo)) {
+        const getRate: any = await fetch(
+          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
+            code +
+            '_USD&date=' +
+            today
+        ).then(response => response.json())
+        if (exchangeRates[code] == null) {
+          exchangeRates[code] = ''
+        }
+        exchangeRates[code] = getRate.exchangeRate
+      }
+      console.log(JSON.stringify(exchangeRates))
+      this.setState({ rates: exchangeRates })
       const partnerReports = await Promise.all(promises)
       for (const report of partnerReports) {
         report.checked = false
@@ -183,22 +200,18 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           }
         }
         report.amountOwed = parseFloat(remainder.toFixed(2))
+        if (this.state.rates[report.incentive.payoutCurrency] != null) {
+          report.amountOwedCrypto = bns.div(
+            report.amountOwed.toString(),
+            this.state.rates[report.incentive.payoutCurrency],
+            8
+          )
+        } else {
+          report.amountOwedCrypto = ''
+          report.incentive.payoutCurrency = 'No currency code'
+        }
       }
       this.setState({ reports: partnerReports })
-
-      // Get Exchange Rates for supported payout currencies
-      const exchangeRates: Rates = this.state.rates
-      const today: string = new Date().toISOString()
-      for (const code of Object.keys(exchangeRates)) {
-        const getRate: any = await fetch(
-          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
-            code +
-            '_USD&date=' +
-            today
-        ).then(response => response.json())
-        exchangeRates[code] = getRate.exchangeRate
-      }
-      this.setState({ rates: exchangeRates })
     } catch (e) {
       console.log(e)
     }
@@ -217,22 +230,15 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           },
           method: 'PUT'
         }
-      ).then(response => {
-        if (response.ok) {
-          return this.getSummaryAsync(
-            this.state.startDate,
-            this.state.endDate
-          ).catch(e => {
-            console.log(e)
-          })
-        }
-      })
+      )
     } catch (e) {
-      console.log(e)
+      throw new Error('putPayout failed ' + JSON.stringify(payoutArray))
     }
   }
 
-  handlePayoutClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  handlePayoutClick = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ): Promise<void> => {
     // Creates an array of all payouts that need to be made to selected referral partners
     const payoutArray = this.payoutArray
     this.state.reports.map(report => {
@@ -246,6 +252,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           const amountOwedString = report.amountOwed.toString()
           const payoutCurrency = report.incentive.payoutCurrency
           const rateString = this.state.rates[payoutCurrency]
+          if (rateString == null) {
+            return
+          }
           const currencyDivider = currencyInfo[payoutCurrency].div
           console.log('ratestring', rateString)
           // Creates a new payout object to update the database
@@ -264,37 +273,58 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             ),
             isAdjustment: false
           }
-          payoutArray.push({ apiKey: report.apiKey, payout: newPayout })
-          currencyInfo[payoutCurrency].spendTargets.push({
-            nativeAmount: amountOwedString,
+          const spendTarget = {
+            nativeAmount: newPayout.nativeAmount,
             publicAddress: report.incentive.payoutAddress
+          }
+          payoutArray.push({
+            apiKey: report.apiKey,
+            payout: newPayout,
+            spendTarget
           })
         }
       }
       return report
     })
     // Batches payments according to batchSize and sends to makePayment
-    for (const code of Object.keys(currencyInfo)) {
-      let index = currencyInfo[code].spendTargets.length
-      while (index > 0) {
-        const spend: string[] = []
+    const spendObject: Spend = {}
+    for (const payout of payoutArray) {
+      const code = payout.payout.currencyCode
+      if (spendObject[code] == null) {
+        spendObject[code] = []
+      }
+      spendObject[code].push(payout)
+    }
+    for (const code of Object.keys(spendObject)) {
+      console.log(
+        'MainScene -> numTransactions',
+        spendObject[code].length,
+        code
+      )
+      while (spendObject[code].length > 0) {
+        const spend: SpendTarget[] = []
+        const pay: any[] = []
         for (let i = 0; i < currencyInfo[code].batchSize; i++) {
-          spend.push(currencyInfo[code].spendTargets.shift())
-          if (currencyInfo[code].spendTargets.length === 0) {
-            break
+          const item = spendObject[code].shift()
+          if (item != null) {
+            spend.push(item.spendTarget)
+            pay.push({
+              apiKey: item.apiKey,
+              payout: item.payout
+            })
           }
         }
-        this.makePayment(currencyInfo[code].type, spend).catch(e => {
+        try {
+          await this.makePayment(currencyInfo[code].type, spend)
+          console.log('spend' + code + JSON.stringify(spend))
+          await this.putPayout(pay)
+          console.log('pay' + code + JSON.stringify(pay))
+        } catch (e) {
           console.log(e)
-        })
-        index -= currencyInfo[code].batchSize
-        console.log('spend' + code + JSON.stringify(spend))
+          console.log(JSON.stringify(e))
+        }
       }
     }
-    // Calls the putPayout function with payoutArray as an argument
-    this.putPayout(payoutArray).catch(e => {
-      console.log(e)
-    })
     // Resets payout array to empty, updates reports
     this.getSummaryAsync(this.state.startDate, this.state.endDate).catch(e => {
       console.log(e)
@@ -304,13 +334,11 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
   makePayment = async (
     currencyType: string,
-    spendTargets: string[]
+    spendTargets: SpendTarget[]
   ): Promise<void> => {
     try {
       await fetch('/spend/?type=' + currencyType, {
-        body: JSON.stringify({
-          spendTargets
-        }),
+        body: JSON.stringify({ spendTargets }),
         headers: {
           'Content-Type': 'application/json'
         },
@@ -318,6 +346,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       })
     } catch (e) {
       console.log(e)
+      throw new Error('makePayment filed: ' + JSON.stringify(spendTargets))
     }
   }
 
@@ -341,6 +370,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             0
           ),
           isAdjustment: true
+        },
+        spendTarget: {
+          nativeAmount: '', // can be blank
+          publicAddress: '' // can be blank
         }
       }
     ]
@@ -433,7 +466,6 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       endDate,
       reports,
       allChecked,
-      rates,
       offlineDollarValue,
       offlineApiKey,
       offlineCurrencyCode
@@ -542,15 +574,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                     <td>{report.amountOwed}</td>
                     <td>{report.totalEarned.toFixed(2)}</td>
                     <td>
-                      {report.amountOwed > 0 &&
-                      typeof report.incentive.payoutCurrency === 'string'
-                        ? (
-                            report.amountOwed /
-                            rates[report.incentive.payoutCurrency]
-                          ).toFixed(2) +
-                          ' ' +
-                          report.incentive.payoutCurrency
-                        : ''}
+                      {`${report.amountOwedCrypto} ${report.incentive.payoutCurrency}`}
                     </td>
                     <td>
                       {typeof report.incentive.payoutAddress === 'string'
