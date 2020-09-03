@@ -140,7 +140,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
   ): Promise<void> => {
     try {
       const json: PartnerObject[] = await fetch(
-        'https://util1.edge.app/api/v1/partner/list?masterKey=' +
+        'https://util2.edge.app/api/v1/partner/list?masterKey=' +
           CONFIG.masterKey
       ).then(response => response.json())
       const partners = json.map(partner => ({
@@ -191,7 +191,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       const today: string = new Date().toISOString()
       for (const code of Object.keys(exchangeRates)) {
         const getRate: any = await fetch(
-          'https://info1.edgesecure.co:8444/v1/exchangeRate?currency_pair=' +
+          'https://rates1.edge.app/v1/exchangeRate?currency_pair=' +
             code +
             '_USD&date=' +
             today
@@ -208,7 +208,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     console.log('put payout click was called', this.payoutArray)
     try {
       await fetch(
-        'https://util1.edge.app/api/v1/partner/payouts/?&masterKey=' +
+        'https://util2.edge.app/api/v1/partner/payouts/?&masterKey=' +
           CONFIG.masterKey,
         {
           body: JSON.stringify(payoutArray),
