@@ -10,13 +10,11 @@ import {
   lockEdgeCorePlugins,
   makeEdgeContext
 } from 'edge-core-js'
-import accountbased from 'edge-currency-accountbased'
 import bitcoinPlugins from 'edge-currency-bitcoin'
 import express from 'express'
 
 import CONFIG from '../config.json'
 addEdgeCorePlugins(bitcoinPlugins)
-addEdgeCorePlugins(accountbased)
 lockEdgeCorePlugins()
 
 async function main(): Promise<void> {
