@@ -151,7 +151,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       for (const partner of partners) {
         if (partner.apiKey != null) {
           let uri =
-            'https://dl.edge.app/api/v1/partner/revenue?apiKey=' +
+            'https://util2.edge.app/api/v1/partner/revenue?apiKey=' +
             partner.apiKey
           if (startDate !== '') {
             uri += '&startDate=' + startDate
