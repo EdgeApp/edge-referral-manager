@@ -23,6 +23,7 @@ async function main(): Promise<void> {
   // Start the core, with Bitcoin enabled:
   const context: EdgeContext = await makeEdgeContext({
     apiKey: CONFIG.API_KEY,
+    apiSecret: CONFIG.API_SECRET,
     appId: CONFIG.APP_ID,
     plugins: CONFIG.PLUGINS
   })
@@ -67,14 +68,10 @@ async function main(): Promise<void> {
       const wallet: EdgeCurrencyWallet = await account.waitForCurrencyWallet(
         walletInfo.id
       )
-      const transactions: EdgeTransaction[] = await wallet.getTransactions()
-      const cleanTransactions = transactions.filter(value => {
-        delete value.wallet
-        delete value.amountSatoshi
-        delete value.otherParams.debugInfo
-        return value
+      const transactions: EdgeTransaction[] = await wallet.getTransactions({
+        tokenId: null
       })
-      res.send(cleanTransactions)
+      res.send(transactions)
     } catch (e) {
       res.status(500).send('Server error in waitForCurrencyWallet')
     }
@@ -96,6 +93,7 @@ async function main(): Promise<void> {
       edgeTransaction = await wallet.makeSpend(spendInfo)
     } catch (e) {
       res.status(400).send('Body does not match EdgeSpendInfo specification')
+      return
     }
     try {
       const signedTx = await wallet.signTx(edgeTransaction)

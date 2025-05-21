@@ -1,12 +1,13 @@
 {
   "API_KEY": "",
-	"APP_ID": "",
-	"PLUGINS": {
-		"bitcoin": true,
-		"bitcoincash": true 
+  "API_SECRET": null,
+  "APP_ID": "",
+  "PLUGINS": {
+    "bitcoin": true,
+    "bitcoincash": true 
   },
-	"MASTER_KEY": "",
-	"USERNAME": "",
-	"PASSWORD": "",
-	"HTTP_PORT": 8008
+  "MASTER_KEY": "",
+  "USERNAME": "",
+  "PASSWORD": "",
+  "HTTP_PORT": 8008
 }
