@@ -13,7 +13,7 @@ import {
 import bitcoinPlugins from 'edge-currency-bitcoin'
 import express from 'express'
 
-import CONFIG from '../config.json'
+import { CONFIG } from './envConfig'
 addEdgeCorePlugins(bitcoinPlugins)
 lockEdgeCorePlugins()
 
@@ -22,15 +22,15 @@ async function main(): Promise<void> {
 
   // Start the core, with Bitcoin enabled:
   const context: EdgeContext = await makeEdgeContext({
-    apiKey: CONFIG.apiKey,
-    appId: CONFIG.appId,
-    plugins: CONFIG.plugins
+    apiKey: CONFIG.API_KEY,
+    appId: CONFIG.APP_ID,
+    plugins: CONFIG.PLUGINS
   })
 
   // Log in to some user:
   const account: EdgeAccount = await context.loginWithPassword(
-    CONFIG.username,
-    CONFIG.password
+    CONFIG.USERNAME,
+    CONFIG.PASSWORD
   )
 
   app.use(bodyParser.json({ limit: '1mb' }))
@@ -107,8 +107,8 @@ async function main(): Promise<void> {
     }
   })
 
-  app.listen(CONFIG.httpPort, () => {
-    console.log('Server is listening on:', CONFIG.httpPort)
+  app.listen(CONFIG.HTTP_PORT, () => {
+    console.log('Server is listening on:', CONFIG.HTTP_PORT)
   })
 }
 main().catch(e => {

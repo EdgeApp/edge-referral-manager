@@ -60,6 +60,7 @@
   "dependencies": {
     "biggystring": "^4.2.3",
     "bootstrap": "^4.4.1",
+    "cleaners": "^0.3.17",
     "cors": "^2.8.5",
     "edge-core-js": "^0.16.21",
     "edge-currency-bitcoin": "^4.7.7",
