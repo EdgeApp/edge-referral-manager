@@ -63,7 +63,7 @@
     "cleaners": "^0.3.17",
     "cors": "^2.8.5",
     "edge-core-js": "^2.27.4",
-    "edge-currency-bitcoin": "^4.7.7",
+    "edge-currency-plugins": "^3.8.0",
     "express": "^4.17.1",
     "react-bootstrap": "2.10.0"
   }

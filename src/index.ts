@@ -8,13 +8,31 @@ import {
   EdgeSpendInfo,
   EdgeTransaction,
   lockEdgeCorePlugins,
-  makeEdgeContext
+  makeEdgeContext,
+  EdgeCorePluginOptions,
+  EdgeCorePlugins
 } from 'edge-core-js'
-import bitcoinPlugins from 'edge-currency-bitcoin'
+import { makeCurrencyPlugin } from 'edge-currency-plugins/lib/common/plugin/CurrencyPlugin'
+import { all } from 'edge-currency-plugins/lib/common/utxobased/info/all'
 import express from 'express'
-
 import { CONFIG } from './envConfig'
-addEdgeCorePlugins(bitcoinPlugins)
+
+const plugins: EdgeCorePlugins = {}
+for (const info of all) {
+  if (CONFIG.PLUGINS[info.currencyInfo.pluginId]) {
+    plugins[info.currencyInfo.pluginId] = (options: EdgeCorePluginOptions) => {
+      options.nativeIo = {
+        'edge-currency-plugins': {
+          memletConfig: {
+            maxMemoryUsage: 50 * 1024 * 1024 // 50MB
+          }
+        }
+      }
+      return makeCurrencyPlugin(options, info)
+    }
+  }
+}
+addEdgeCorePlugins(plugins)
 lockEdgeCorePlugins()
 
 async function main(): Promise<void> {
