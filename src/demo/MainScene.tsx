@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 import { bns } from 'biggystring'
 import React from 'react'
-import { Button, Col, Form } from 'react-bootstrap'
+import { Button, Col, Form, Row } from 'react-bootstrap'
 
 import CONFIG from './../../config.json'
 
@@ -446,7 +446,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           payments to referral partners.
         </p>
         <Form className="pt-5 container">
-          <Form.Row className="row justify-content-center">
+          <Row className="row justify-content-center">
             <Col>
               <Form.Label>Start Date</Form.Label>
               <Form.Control
@@ -471,7 +471,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 Please enter an end date.
               </Form.Text>
             </Col>
-          </Form.Row>
+          </Row>
         </Form>
 
         <Button
@@ -589,7 +589,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             payment will be added to the payout records.{' '}
           </p>
           <Form className="container">
-            <Form.Row className="row justify-content-center">
+            <Row className="row justify-content-center">
               <Col>
                 <Form.Label>Amount Owed</Form.Label>
                 <Form.Control
@@ -626,7 +626,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                   Please enter the currency code of the referral partner.
                 </Form.Text>
               </Col>
-            </Form.Row>
+            </Row>
           </Form>
           <Button
             variant="primary"
