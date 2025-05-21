@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'bootstrap/dist/css/bootstrap.min.css'
 
-import { bns } from 'biggystring'
+import { div, mul, toFixed } from 'biggystring'
 import React from 'react'
 import { Button, Col, Form, Row } from 'react-bootstrap'
 
@@ -253,9 +253,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             date: new Date().toISOString(),
             dollarValue: report.amountOwed,
             currencyCode: payoutCurrency,
-            nativeAmount: bns.toFixed(
-              bns.div(
-                bns.mul(amountOwedString, currencyDivider),
+            nativeAmount: toFixed(
+              div(
+                mul(amountOwedString, currencyDivider),
                 rateString,
                 16
               ),
@@ -335,8 +335,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           date: new Date().toISOString(),
           dollarValue: parseFloat(this.state.offlineDollarValue),
           currencyCode: payoutCurrency,
-          nativeAmount: bns.toFixed(
-            bns.div(bns.mul(amountOwedString, currencyDivider), rateString, 16),
+          nativeAmount: toFixed(
+            div(mul(amountOwedString, currencyDivider), rateString, 16),
             0,
             0
           ),

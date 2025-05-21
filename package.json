@@ -58,7 +58,7 @@
     "typescript": "5.0.4"
   },
   "dependencies": {
-    "biggystring": "^3.0.2",
+    "biggystring": "^4.2.3",
     "bootstrap": "^4.4.1",
     "cors": "^2.8.5",
     "edge-core-js": "^0.16.21",
