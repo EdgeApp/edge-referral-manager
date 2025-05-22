@@ -3,8 +3,12 @@
   "API_SECRET": null,
   "APP_ID": "",
   "PLUGINS": {
-    "bitcoin": true,
-    "bitcoincash": true 
+    "bitcoin": {
+      "nowNodesApiKey": ""
+    },
+    "bitcoincash": {
+      "nowNodesApiKey": ""
+    } 
   },
   "MASTER_KEY": "",
   "USERNAME": "",

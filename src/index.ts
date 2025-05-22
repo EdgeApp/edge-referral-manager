@@ -10,7 +10,8 @@ import {
   lockEdgeCorePlugins,
   makeEdgeContext,
   EdgeCorePluginOptions,
-  EdgeCorePlugins
+  EdgeCorePlugins,
+  JsonObject
 } from 'edge-core-js'
 import { makeCurrencyPlugin } from 'edge-currency-plugins/lib/common/plugin/CurrencyPlugin'
 import { all } from 'edge-currency-plugins/lib/common/utxobased/info/all'
@@ -19,7 +20,8 @@ import { CONFIG } from './envConfig'
 
 const plugins: EdgeCorePlugins = {}
 for (const info of all) {
-  if (CONFIG.PLUGINS[info.currencyInfo.pluginId]) {
+  const initOptions: JsonObject | boolean = CONFIG.PLUGINS[info.currencyInfo.pluginId]
+  if (initOptions !== false) {
     plugins[info.currencyInfo.pluginId] = (options: EdgeCorePluginOptions) => {
       options.nativeIo = {
         'edge-currency-plugins': {
@@ -28,6 +30,7 @@ for (const info of all) {
           }
         }
       }
+      options.initOptions = initOptions === true ? {} : initOptions
       return makeCurrencyPlugin(options, info)
     }
   }
