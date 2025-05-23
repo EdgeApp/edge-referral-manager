@@ -2,8 +2,12 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 
 import { div, mul, toFixed } from 'biggystring'
-import React from 'react'
-import { Button, Col, Form, Row } from 'react-bootstrap'
+import * as React from 'react'
+import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
+import Row from 'react-bootstrap/Row'
+
 
 import CONFIG from './../../config.json'
 
