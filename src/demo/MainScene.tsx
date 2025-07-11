@@ -145,7 +145,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     try {
       const json: PartnerObject[] = await fetch(
         'https://util2.edge.app/api/v1/partner/list?masterKey=' +
-          CONFIG.masterKey
+          CONFIG.MASTER_KEY
       ).then(response => response.json())
       const partners = json.map(partner => ({
         apiKey: partner.apiKey
@@ -213,7 +213,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     try {
       await fetch(
         'https://util2.edge.app/api/v1/partner/payouts/?&masterKey=' +
-          CONFIG.masterKey,
+          CONFIG.MASTER_KEY,
         {
           body: JSON.stringify(payoutArray),
           headers: {
