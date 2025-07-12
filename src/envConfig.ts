@@ -10,6 +10,7 @@ const asEnvConfig = asObject({
   MASTER_KEY: asString,
   USERNAME: asString,
   PASSWORD: asString,
+  OTP_KEY: asOptional(asString, ''),
   HTTP_PORT: asNumber
 }).withRest
 

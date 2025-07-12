@@ -8,34 +8,16 @@ import {
   EdgeSpendInfo,
   EdgeTransaction,
   lockEdgeCorePlugins,
-  makeEdgeContext,
-  EdgeCorePluginOptions,
-  EdgeCorePlugins,
-  JsonObject
+  makeEdgeContext, EdgeCorePlugins
 } from 'edge-core-js'
-import { makeCurrencyPlugin } from 'edge-currency-plugins/lib/common/plugin/CurrencyPlugin'
-import { all } from 'edge-currency-plugins/lib/common/utxobased/info/all'
+import currencyPlugins from 'edge-currency-plugins'
 import express from 'express'
-import { CONFIG } from './envConfig'
+import { CONFIG } from '../envConfig'
 
-const plugins: EdgeCorePlugins = {}
-for (const info of all) {
-  const initOptions: JsonObject | boolean = CONFIG.PLUGINS[info.currencyInfo.pluginId]
-  if (initOptions !== false) {
-    plugins[info.currencyInfo.pluginId] = (options: EdgeCorePluginOptions) => {
-      options.nativeIo = {
-        'edge-currency-plugins': {
-          memletConfig: {
-            maxMemoryUsage: 50 * 1024 * 1024 // 50MB
-          }
-        }
-      }
-      options.initOptions = initOptions === true ? {} : initOptions
-      return makeCurrencyPlugin(options, info)
-    }
-  }
+const plugins: EdgeCorePlugins = {
+  ...currencyPlugins,
 }
-addEdgeCorePlugins(plugins)
+addEdgeCorePlugins(currencyPlugins)
 lockEdgeCorePlugins()
 
 async function main(): Promise<void> {
@@ -52,7 +34,10 @@ async function main(): Promise<void> {
   // Log in to some user:
   const account: EdgeAccount = await context.loginWithPassword(
     CONFIG.USERNAME,
-    CONFIG.PASSWORD
+    CONFIG.PASSWORD,
+    {
+      otpKey: CONFIG.OTP_KEY
+    }
   )
 
   app.use(bodyParser.json({ limit: '1mb' }))
