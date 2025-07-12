@@ -1,0 +1,10 @@
+{
+    "apps": [
+      {
+        "name": "referralManager",
+        "script": "lib/server/index.js",
+        "error_file": "/var/log/pm2/referralManager.error.log",
+        "out_file": "/var/log/pm2/referralManager.out.log"
+      }
+    ]
+  }
