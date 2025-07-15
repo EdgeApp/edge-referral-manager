@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'bootstrap/dist/css/bootstrap.min.css'
 
-import { bns } from 'biggystring'
-import React from 'react'
-import { Button, Col, Form } from 'react-bootstrap'
+import { div, mul, toFixed } from 'biggystring'
+import * as React from 'react'
+import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
+import Row from 'react-bootstrap/Row'
 
-import CONFIG from './../../config.json'
+import CONFIG from '../../config.json'
+import { EdgeSpendTarget } from 'edge-core-js'
 
 interface MainSceneState {
   reports: PartnerReferralReport[]
@@ -19,12 +23,7 @@ interface MainSceneState {
   offlineCurrencyCode: string
 }
 
-interface Rates {
-  BTC: string
-  BCH: string
-  ETH: string
-  XRP: string
-}
+type Rates = Record<string, number>
 
 interface PartnerObject {
   apiKey?: string
@@ -59,7 +58,7 @@ interface UpdatePayout {
   payout: Payout
 }
 
-const currencyInfo = {
+const currencyInfo: Record<string, { div: string, type: string, batchSize: number, spendTargets: EdgeSpendTarget[] }> = {
   BTC: {
     div: '100000000',
     type: 'bitcoin',
@@ -88,7 +87,7 @@ const currencyInfo = {
 
 export class MainScene extends React.Component<{}, MainSceneState> {
   payoutArray: UpdatePayout[] = []
-  constructor(props) {
+  constructor(props: {}) {
     super(props)
     // first day of the month
     var today = new Date()
@@ -122,10 +121,10 @@ export class MainScene extends React.Component<{}, MainSceneState> {
       startDate,
       endDate,
       rates: {
-        BTC: '0',
-        BCH: '0',
-        ETH: '0',
-        XRP: '0'
+        BTC: 0,
+        BCH: 0,
+        ETH: 0,
+        XRP: 0
       },
       allChecked: false,
       offlineApiKey: '',
@@ -141,7 +140,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     try {
       const json: PartnerObject[] = await fetch(
         'https://util2.edge.app/api/v1/partner/list?masterKey=' +
-          CONFIG.masterKey
+          CONFIG.MASTER_KEY
       ).then(response => response.json())
       const partners = json.map(partner => ({
         apiKey: partner.apiKey
@@ -209,7 +208,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     try {
       await fetch(
         'https://util2.edge.app/api/v1/partner/payouts/?&masterKey=' +
-          CONFIG.masterKey,
+          CONFIG.MASTER_KEY,
         {
           body: JSON.stringify(payoutArray),
           headers: {
@@ -253,9 +252,9 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             date: new Date().toISOString(),
             dollarValue: report.amountOwed,
             currencyCode: payoutCurrency,
-            nativeAmount: bns.toFixed(
-              bns.div(
-                bns.mul(amountOwedString, currencyDivider),
+            nativeAmount: toFixed(
+              div(
+                mul(amountOwedString, currencyDivider),
                 rateString,
                 16
               ),
@@ -277,9 +276,12 @@ export class MainScene extends React.Component<{}, MainSceneState> {
     for (const code of Object.keys(currencyInfo)) {
       let index = currencyInfo[code].spendTargets.length
       while (index > 0) {
-        const spend: string[] = []
+        const spend: Array<EdgeSpendTarget> = []
         for (let i = 0; i < currencyInfo[code].batchSize; i++) {
-          spend.push(currencyInfo[code].spendTargets.shift())
+          const spendTarget = currencyInfo[code].spendTargets.shift()
+          if (spendTarget != null) {
+            spend.push(spendTarget)
+          }
           if (currencyInfo[code].spendTargets.length === 0) {
             break
           }
@@ -304,7 +306,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
 
   makePayment = async (
     currencyType: string,
-    spendTargets: string[]
+    spendTargets: EdgeSpendTarget[]
   ): Promise<void> => {
     try {
       await fetch('/spend/?type=' + currencyType, {
@@ -335,8 +337,8 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           date: new Date().toISOString(),
           dollarValue: parseFloat(this.state.offlineDollarValue),
           currencyCode: payoutCurrency,
-          nativeAmount: bns.toFixed(
-            bns.div(bns.mul(amountOwedString, currencyDivider), rateString, 16),
+          nativeAmount: toFixed(
+            div(mul(amountOwedString, currencyDivider), rateString, 16),
             0,
             0
           ),
@@ -446,7 +448,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
           payments to referral partners.
         </p>
         <Form className="pt-5 container">
-          <Form.Row className="row justify-content-center">
+          <Row className="row justify-content-center">
             <Col>
               <Form.Label>Start Date</Form.Label>
               <Form.Control
@@ -471,7 +473,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                 Please enter an end date.
               </Form.Text>
             </Col>
-          </Form.Row>
+          </Row>
         </Form>
 
         <Button
@@ -589,7 +591,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
             payment will be added to the payout records.{' '}
           </p>
           <Form className="container">
-            <Form.Row className="row justify-content-center">
+            <Row className="row justify-content-center">
               <Col>
                 <Form.Label>Amount Owed</Form.Label>
                 <Form.Control
@@ -626,7 +628,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
                   Please enter the currency code of the referral partner.
                 </Form.Text>
               </Col>
-            </Form.Row>
+            </Row>
           </Form>
           <Button
             variant="primary"
@@ -652,7 +654,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.checked === true
       ) {
         sumBTC +=
-          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+          report.amountOwed / rates[report.incentive.payoutCurrency]
       }
     }
     for (const report of reports) {
@@ -661,7 +663,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.checked === true
       ) {
         sumBCH +=
-          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+          report.amountOwed / rates[report.incentive.payoutCurrency]
       }
     }
     for (const report of reports) {
@@ -670,7 +672,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.checked === true
       ) {
         sumETH +=
-          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+          report.amountOwed / rates[report.incentive.payoutCurrency]
       }
     }
     for (const report of reports) {
@@ -679,7 +681,7 @@ export class MainScene extends React.Component<{}, MainSceneState> {
         report.checked === true
       ) {
         sumXRP +=
-          report.amountOwed / parseFloat(rates[report.incentive.payoutCurrency])
+          report.amountOwed / rates[report.incentive.payoutCurrency]
       }
     }
     return (

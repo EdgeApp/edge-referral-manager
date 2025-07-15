@@ -1,11 +1,17 @@
 {
-  "apiKey":"",
-  "appId": "",
-  "plugins": {
-    "bitcoin": true,
-    "bitcoincash": true
+  "API_KEY": "",
+  "API_SECRET": null,
+  "APP_ID": "",
+  "PLUGINS": {
+    "bitcoin": {
+      "nowNodesApiKey": ""
+    },
+    "bitcoincash": {
+      "nowNodesApiKey": ""
+    } 
   },
-  "username": "",
-  "password": "",
-  "httpPort":
+  "MASTER_KEY": "",
+  "USERNAME": "",
+  "PASSWORD": "",
+  "HTTP_PORT": 8008
 }
